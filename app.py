@@ -22,6 +22,7 @@ from flask import Flask, redirect, render_template, request, session, url_for
 import api_client
 import data_mapper
 import db
+import mailer
 import predictor
 
 app = Flask(__name__)
@@ -94,6 +95,46 @@ def login():
 
     session["user_id"] = user["id"]
     return redirect(url_for("index"))
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "GET":
+        return render_template("forgot_password.html", message=None)
+
+    email = request.form.get("email", "").strip()
+    user = db.get_user_by_email(email)
+    if user:
+        token = db.create_reset_token(user["id"])
+        reset_link = url_for("reset_password", token=token, _external=True)
+        mailer.send_password_reset_email(email, reset_link)
+
+    # 가입된 이메일인지 여부를 알려주지 않는다 (보안 관례 - 존재하지 않는
+    # 이메일이라고 알려주면 "이 이메일이 가입되어 있는지"를 외부에서 캐낼 수 있음)
+    return render_template(
+        "forgot_password.html",
+        message="입력하신 이메일이 가입되어 있다면, 재설정 링크를 보내드렸습니다.",
+    )
+
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    token = request.args.get("token") or request.form.get("token", "")
+    reset = db.get_valid_reset_token(token)
+
+    if not reset:
+        return render_template("reset_password.html", token=None, error="링크가 유효하지 않거나 만료되었습니다. 다시 요청해주세요.")
+
+    if request.method == "GET":
+        return render_template("reset_password.html", token=token, error=None)
+
+    new_password = request.form.get("password", "").strip()
+    if len(new_password) < 6:
+        return render_template("reset_password.html", token=token, error="비밀번호는 6자 이상이어야 합니다.")
+
+    db.update_password(reset["user_id"], new_password)
+    db.delete_reset_token(token)
+    return redirect(url_for("login"))
 
 
 @app.route("/logout", methods=["GET"])

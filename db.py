@@ -9,13 +9,15 @@ Render 같은 곳에 배포할 때는 이 파일이 재배포마다 초기화될
 """
 
 import os
+import secrets
 import sqlite3
 from contextlib import closing
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
 DB_PATH = os.environ.get("DB_PATH", "footy_predictor.db")
+RESET_TOKEN_VALID_MINUTES = 60  # 재설정 링크 유효 시간
 
 
 def _connect():
@@ -43,6 +45,13 @@ def init_db():
                 usage_date TEXT NOT NULL,
                 count INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY (user_id, usage_date)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS password_resets (
+                token TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                expires_at TEXT NOT NULL
             )
         """)
         conn.commit()
@@ -146,3 +155,46 @@ def ensure_admin_from_env():
     if get_user_by_email(email):
         return
     create_user(email, password, daily_limit=None, is_admin=True)
+
+
+def create_reset_token(user_id: int) -> str:
+    """비밀번호 재설정용 토큰을 하나 만들어서 저장하고 반환한다."""
+    token = secrets.token_urlsafe(32)
+    expires_at = (datetime.utcnow() + timedelta(minutes=RESET_TOKEN_VALID_MINUTES)).isoformat()
+    with closing(_connect()) as conn:
+        conn.execute(
+            "INSERT INTO password_resets (token, user_id, expires_at) VALUES (?, ?, ?)",
+            (token, user_id, expires_at),
+        )
+        conn.commit()
+    return token
+
+
+def get_valid_reset_token(token: str):
+    """
+    토큰이 존재하고 아직 안 만료됐으면 {"user_id":...} 형태로 반환, 아니면 None.
+    """
+    with closing(_connect()) as conn:
+        row = conn.execute(
+            "SELECT * FROM password_resets WHERE token = ?", (token,)
+        ).fetchone()
+        if not row:
+            return None
+        if datetime.utcnow() > datetime.fromisoformat(row["expires_at"]):
+            return None
+        return dict(row)
+
+
+def delete_reset_token(token: str):
+    with closing(_connect()) as conn:
+        conn.execute("DELETE FROM password_resets WHERE token = ?", (token,))
+        conn.commit()
+
+
+def update_password(user_id: int, new_password: str):
+    with closing(_connect()) as conn:
+        conn.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (generate_password_hash(new_password), user_id),
+        )
+        conn.commit()
