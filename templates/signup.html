@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>회원가입 - PitchIQ</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 420px; margin: 80px auto; padding: 0 16px; color: #1a1a1a; }
+  h1 { font-size: 22px; }
+  form { background: #f5f5f7; padding: 20px; border-radius: 12px; }
+  label { display: block; font-size: 13px; color: #555; margin-top: 12px; }
+  input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+  button { margin-top: 16px; padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; }
+  .error { color: #c0392b; background: #fdecea; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+  .link { text-align: center; margin-top: 16px; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>⚽ PitchIQ 회원가입</h1>
+
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/signup">
+    <label>이메일</label>
+    <input type="email" name="email" required>
+
+    <label>비밀번호 (6자 이상)</label>
+    <input type="password" name="password" required minlength="6">
+
+    <button type="submit">가입하기</button>
+  </form>
+
+  <p class="link">이미 계정이 있으신가요? <a href="/login">로그인</a></p>
+</body>
+</html>
