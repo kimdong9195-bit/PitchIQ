@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>PitchIQ</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #1a1a1a; }
+  h1 { font-size: 22px; }
+  form { background: #f5f5f7; padding: 20px; border-radius: 12px; margin-bottom: 24px; }
+  label { display: block; font-size: 13px; color: #555; margin-top: 12px; }
+  input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+  button { margin-top: 16px; padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; }
+  .error { color: #c0392b; background: #fdecea; padding: 12px; border-radius: 8px; }
+  .result-box { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 20px; }
+  .pick { font-weight: bold; color: #0070f3; }
+  .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+  .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h1>⚽ PitchIQ</h1>
+    {% if user %}
+      <div style="font-size:13px; color:#555;">
+        {{ user.email }}{% if user.is_admin %} (관리자){% endif %}
+        · 오늘 사용량: {{ today_usage }}{% if user.daily_limit is not none %}/{{ user.daily_limit }}{% else %}/무제한{% endif %}
+        · <a href="/logout">로그아웃</a>
+      </div>
+    {% else %}
+      <div style="font-size:13px;"><a href="/login">로그인</a> / <a href="/signup">회원가입</a></div>
+    {% endif %}
+  </div>
+
+  {% if not user %}
+    <p style="background:#fff8e1; padding:16px; border-radius:8px; font-size:14px;">
+      분석 기능을 쓰려면 먼저 <a href="/login">로그인</a>하거나 <a href="/signup">회원가입</a>해주세요.
+    </p>
+  {% else %}
+  <form method="POST" action="/analyze">
+    <label>홈팀 이름 (영문)</label>
+    <input type="text" name="team_a" list="team-list" value="{{ form_data.get('team_a', '') }}" required>
+
+    <label>원정팀 이름 (영문)</label>
+    <input type="text" name="team_b" list="team-list" value="{{ form_data.get('team_b', '') }}" required>
+    <p style="font-size:11px; color:#888; margin:2px 0 0 0;">몇 글자 입력하면 목록이 뜹니다. 목록에 없는 팀도 영문으로 직접 입력 가능해요.</p>
+
+    <datalist id="team-list">
+      <!-- 2026-27 시즌 프리미어리그 20개 클럽 -->
+      <option value="Arsenal">
+      <option value="Aston Villa">
+      <option value="Bournemouth">
+      <option value="Brentford">
+      <option value="Brighton">
+      <option value="Chelsea">
+      <option value="Coventry City">
+      <option value="Crystal Palace">
+      <option value="Everton">
+      <option value="Fulham">
+      <option value="Hull City">
+      <option value="Ipswich Town">
+      <option value="Leeds United">
+      <option value="Liverpool">
+      <option value="Manchester City">
+      <option value="Manchester United">
+      <option value="Newcastle United">
+      <option value="Nottingham Forest">
+      <option value="Sunderland">
+      <option value="Tottenham">
+      <!-- 자주 언급되는 챔피언십/기타 클럽 (참고용, 목록에 없어도 직접 입력 가능) -->
+      <option value="Norwich City">
+      <option value="Leicester City">
+      <option value="Southampton">
+      <option value="West Ham United">
+      <option value="Wolverhampton Wanderers">
+      <option value="Middlesbrough">
+      <option value="Sheffield United">
+      <option value="Sheffield Wednesday">
+      <option value="Watford">
+      <option value="Stoke City">
+      <option value="Burnley">
+      <!-- 2026-27 시즌 라리가 20개 클럽 -->
+      <option value="Real Madrid">
+      <option value="Barcelona">
+      <option value="Atletico Madrid">
+      <option value="Villarreal">
+      <option value="Real Betis">
+      <option value="Celta Vigo">
+      <option value="Osasuna">
+      <option value="Real Sociedad">
+      <option value="Athletic Club">
+      <option value="Sevilla">
+      <option value="Valencia">
+      <option value="Getafe">
+      <option value="Rayo Vallecano">
+      <option value="Alaves">
+      <option value="Espanyol">
+      <option value="Elche">
+      <option value="Levante">
+      <option value="Racing Santander">
+      <option value="Deportivo La Coruna">
+      <option value="Malaga">
+      <!-- 2026-27 시즌 세리에A 20개 클럽 -->
+      <option value="Inter Milan">
+      <option value="Napoli">
+      <option value="AS Roma">
+      <option value="Como">
+      <option value="AC Milan">
+      <option value="Juventus">
+      <option value="Atalanta">
+      <option value="Lazio">
+      <option value="Bologna">
+      <option value="Fiorentina">
+      <option value="Genoa">
+      <option value="Udinese">
+      <option value="Parma">
+      <option value="Cagliari">
+      <option value="Lecce">
+      <option value="Sassuolo">
+      <option value="Torino">
+      <option value="Frosinone">
+      <option value="Venezia">
+      <option value="Monza">
+      <!-- 2026-27 시즌 분데스리가 18개 클럽 -->
+      <option value="Bayern Munich">
+      <option value="Borussia Dortmund">
+      <option value="RB Leipzig">
+      <option value="Bayer Leverkusen">
+      <option value="VfB Stuttgart">
+      <option value="Eintracht Frankfurt">
+      <option value="TSG Hoffenheim">
+      <option value="Union Berlin">
+      <option value="SC Freiburg">
+      <option value="Mainz 05">
+      <option value="Borussia Monchengladbach">
+      <option value="Werder Bremen">
+      <option value="FC Augsburg">
+      <option value="1. FC Koln">
+      <option value="Hamburger SV">
+      <option value="Schalke 04">
+      <option value="SV Elversberg">
+      <option value="SC Paderborn">
+      <!-- 2026-27 시즌 리그1 18개 클럽 -->
+      <option value="Paris Saint-Germain">
+      <option value="RC Lens">
+      <option value="Lille">
+      <option value="Olympique Lyon">
+      <option value="Marseille">
+      <option value="Stade Rennais">
+      <option value="Monaco">
+      <option value="Strasbourg">
+      <option value="Toulouse">
+      <option value="Lorient">
+      <option value="Paris FC">
+      <option value="Brest">
+      <option value="Angers">
+      <option value="Le Havre">
+      <option value="Auxerre">
+      <option value="Nice">
+      <option value="Troyes">
+      <option value="Le Mans">
+      <!-- 2026-27 챔피언스리그 참가팀 중 5대리그 외 소속 클럽 -->
+      <option value="PSV Eindhoven">
+      <option value="Feyenoord">
+      <option value="Sporting CP">
+      <option value="Porto">
+      <option value="Club Brugge">
+      <option value="Slavia Prague">
+      <option value="Galatasaray">
+      <option value="Fenerbahce">
+      <option value="Shakhtar Donetsk">
+      <option value="Bodo/Glimt">
+      <option value="AEK Athens">
+      <option value="Slovan Bratislava">
+      <option value="Viking FK">
+      <option value="LASK">
+    </datalist>
+    <p style="font-size:11px; color:#888; margin:2px 0 0 0;">현재 유럽 5대리그(EPL, 라리가, 세리에A, 분데스리가, 리그1) 팀 목록이 등록되어 있어요. 다른 리그 팀도 영문 이름으로 직접 입력하면 분석 가능합니다.</p>
+
+    <label>홈팀 핵심 선수 (선택)</label>
+    <input type="text" name="core_player_a" value="{{ form_data.get('core_player_a', '') }}">
+
+    <label>원정팀 핵심 선수 (선택)</label>
+    <input type="text" name="core_player_b" value="{{ form_data.get('core_player_b', '') }}">
+
+    <label>경기 날짜 (선택, 과거 경기 검증용 - 비워두면 시즌 최신 기준)</label>
+    <input type="date" name="match_date" value="{{ form_data.get('match_date', '') }}">
+
+    <p style="font-size:11px; color:#888; margin-top:16px; margin-bottom:0;">
+      아래 항목은 여러 개 동시에 체크할 수 있습니다. 체크 시 <b>득점 감소율은 서로 곱해지고</b>,
+      <b>무승부 보정값은 체크한 항목 중 가장 센 값 하나만</b> 적용됩니다 (더해지지 않음).
+    </p>
+
+    <label style="display:flex; align-items:center; gap:6px; margin-top:12px;">
+      <input type="checkbox" name="title_race" style="width:auto;" {% if form_data.get('title_race') %}checked{% endif %}>
+      타이틀경쟁 / 상위권 맞대결
+    </label>
+    <p style="font-size:11px; color:#888; margin:2px 0 0 24px;">
+      * 기본값과 다른 점: 예상 득점을 <b>15% 낮추고</b>(x0.85), 무승부 보정값을 기본(-0.13)에서
+      <b>-0.30</b>으로 강하게 적용합니다.<br>
+      * 이유: 실력이 비슷한 상위권 팀끼리는 서로 실수를 피하려 신중하게 플레이해서,
+      통계상 우세해 보여도 실제로는 저득점 무승부로 끝나는 경우가 많기 때문입니다.
+    </p>
+
+    <label style="display:flex; align-items:center; gap:6px; margin-top:12px;">
+      <input type="checkbox" name="local_derby" style="width:auto;" {% if form_data.get('local_derby') %}checked{% endif %}>
+      지역 더비 / 라이벌전
+    </label>
+    <p style="font-size:11px; color:#888; margin:2px 0 0 24px;">
+      * 기본값과 다른 점: 예상 득점은 <b>그대로 유지</b>하고, 무승부 보정값만 기본(-0.13)에서
+      <b>-0.35</b>로 (세 항목 중 가장 강하게) 적용합니다.<br>
+      * 이유: 감정적으로 격해지는 더비는 화끈한 대승이 나올 때도 있어서 득점 자체를
+      줄이면 안 되지만, 실제 기록상 무승부 비율이 유독 높기 때문입니다 (예: 머지사이드
+      더비는 최근 22경기 중 12경기가 무승부).
+    </p>
+
+    <label style="display:flex; align-items:center; gap:6px; margin-top:12px;">
+      <input type="checkbox" name="relegation_battle" style="width:auto;" {% if form_data.get('relegation_battle') %}checked{% endif %}>
+      강등권 다툼
+    </label>
+    <p style="font-size:11px; color:#888; margin:2px 0 0 24px;">
+      * 기본값과 다른 점: 예상 득점을 <b>20% 낮추고</b>(x0.80), 무승부 보정값을 기본(-0.13)에서
+      <b>-0.30</b>으로 강하게 적용합니다.<br>
+      * 이유: 팀 실력 자체가 낮은데 져서는 안 된다는 긴장감까지 더해져서, 결정적인
+      찬스가 적고 답답하게 흘러가는 경기가 많다는 관찰을 반영한 것입니다.
+    </p>
+
+    <button type="submit">분석하기</button>
+  </form>
+  {% endif %}
+
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+
+  {% if result %}
+  <div class="result-box">
+    <h2>{{ result.home_team }} vs {{ result.away_team }}</h2>
+    {% if result.match_context.is_special_context %}
+      <p style="color:#c0392b; font-weight:bold;">
+        ⚠ 특수 맥락 적용됨:
+        {% if result.match_context.title_race %}타이틀경쟁 {% endif %}
+        {% if result.match_context.local_derby %}지역더비 {% endif %}
+        {% if result.match_context.relegation_battle %}강등권다툼{% endif %}
+      </p>
+    {% endif %}
+
+    {% for details in [result.home_core_player_details, result.away_core_player_details] %}
+      {% for p in details %}
+        <div class="row">
+          <span>{{ p.name }}</span>
+          <span>
+            {% if p.available %}출전{% else %}결장 ({{ p.method }}){% endif %}
+          </span>
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    <p>예상 득점(λ): {{ result.home_team }} {{ result.home_lambda }} - {{ result.away_lambda }} {{ result.away_team }}</p>
+
+    <div class="section-title">확정 라인업</div>
+    {% if result.lineups %}
+      {% for team_name, lineup in result.lineups.items() %}
+        <p style="margin-bottom:4px;"><b>{{ team_name }}</b> ({{ lineup.formation }})</p>
+        <p style="font-size:13px; color:#333; margin-top:0;">{{ lineup.starters | join(', ') }}</p>
+      {% endfor %}
+    {% else %}
+      <p style="font-size:13px; color:#888;">
+        아직 라인업이 발표되지 않았습니다. 실전 경기는 보통 킥오프 1시간 전쯤 확정 라인업이 나옵니다.
+        (과거 경기를 날짜 지정해서 분석하는 경우인데도 안 뜬다면, 해당 경기의 상세 데이터가
+        API에 없는 것일 수 있습니다.)
+      </p>
+    {% endif %}
+
+    <div class="section-title">승/무/패</div>
+    <div class="row"><span>{{ result.home_team }} 승</span><span>{{ (result.probabilities.home_win * 100) | round(1) }}%</span></div>
+    <div class="row"><span>무승부</span><span>{{ (result.probabilities.draw * 100) | round(1) }}%</span></div>
+    <div class="row"><span>{{ result.away_team }} 승</span><span>{{ (result.probabilities.away_win * 100) | round(1) }}%</span></div>
+
+    <div class="section-title">오버/언더 2.5골</div>
+    <div class="row"><span>오버</span><span>{{ (result.probabilities.over_2_5 * 100) | round(1) }}%</span></div>
+    <div class="row"><span>언더</span><span>{{ (result.probabilities.under_2_5 * 100) | round(1) }}%</span></div>
+
+    <div class="section-title">양팀득점(BTTS)</div>
+    <div class="row"><span>Yes</span><span>{{ (result.probabilities.btts_yes * 100) | round(1) }}%</span></div>
+    <div class="row"><span>No</span><span>{{ (result.probabilities.btts_no * 100) | round(1) }}%</span></div>
+
+    <div class="section-title">가장 유력한 스코어</div>
+    {% for s in result.most_likely_scores %}
+      <div class="row"><span>{{ s.home_goals }}-{{ s.away_goals }}</span><span>{{ (s.probability * 100) | round(1) }}%</span></div>
+    {% endfor %}
+
+    <div class="section-title">추천 픽</div>
+    <div class="row"><span>승무패</span><span class="pick">{{ result.picks.result.pick }} ({{ (result.picks.result.confidence * 100) | round(1) }}%)</span></div>
+    <div class="row"><span>무승부 제외(DNB)</span><span class="pick">{{ result.picks.draw_no_bet.pick }} ({{ (result.picks.draw_no_bet.confidence * 100) | round(1) }}%)</span></div>
+    <div class="row"><span>BTTS</span><span class="pick">{{ result.picks.btts.pick }} ({{ (result.picks.btts.confidence * 100) | round(1) }}%)</span></div>
+    <div class="row"><span>핸디캡</span><span class="pick">{{ result.picks.handicap.pick }} ({{ (result.picks.handicap.confidence * 100) | round(1) }}%)</span></div>
+    {% if result.match_context.is_special_context %}
+    <p style="font-size:12px; color:#888; margin-top:12px;">
+      빅매치는 승무패를 억지로 찍기보다, 위의 '무승부 제외(DNB)'나 '핸디캡' 픽이
+      더 안전한 참고 지표입니다. 무승부가 나오면 DNB는 적중도 실패도 아닌
+      환불 개념으로 취급하는 마켓이에요.
+    </p>
+    {% endif %}
+  </div>
+  {% endif %}
+</body>
+</html>
