@@ -14,6 +14,7 @@ dashboard.api-football.com에서 직접 가입한 경우 사용하는 버전입�
 
 import os
 import requests
+from datetime import date
 
 BASE_URL = "https://v3.football.api-sports.io"
 
@@ -59,13 +60,34 @@ def get_recent_fixtures(team_id: int, season: int, count: int = 5, before_date: 
     (분석하려는 경기 시점 기준으로 "그때의 진짜 최근 폼"을 보려면 반드시 필요함 -
      안 주면 시즌 전체에서 가장 최근 경기를 가져오므로, 과거 시즌을 분석할 때
      시즌 끝 무렵 폼으로 계산되어 실제 경기 시점과 안 맞을 수 있다)
+
+    시즌 초반이라 해당 시즌 경기가 count개보다 적으면, 모자란 만큼 직전 시즌
+    막판 경기로 채운다 (표본이 2~3경기뿐이면 폼 계산이 통계적으로 불안정해지므로).
+
+    이 보충 로직은 "과거 경기를 백테스트하는 경우"(before_date가 실제 과거 날짜)에는
+    적용하지 않는다 - 그때는 그 시점 데이터만으로 정확히 재현하는 게 목적이라
+    다른 기간 데이터를 섞으면 안 되기 때문이다. 반대로 before_date가 오늘이거나
+    미래 날짜라면(=아직 안 열린 경기를 예측하려는 것) 날짜를 안 준 것과 똑같이
+    취급해서 보충을 적용한다.
     """
-    data = _get("fixtures", {"team": team_id, "season": season})
-    fixtures = data.get("response", [])
-    finished = [f for f in fixtures if f["fixture"]["status"]["short"] == "FT"]
-    if before_date:
-        finished = [f for f in finished if f["fixture"]["date"][:10] < before_date]
-    finished.sort(key=lambda f: f["fixture"]["date"])  # 오래된 것 -> 최근 것 순
+    def _fetch_season_finished(season_year):
+        data = _get("fixtures", {"team": team_id, "season": season_year})
+        fixtures = data.get("response", [])
+        finished = [f for f in fixtures if f["fixture"]["status"]["short"] == "FT"]
+        if before_date:
+            finished = [f for f in finished if f["fixture"]["date"][:10] < before_date]
+        finished.sort(key=lambda f: f["fixture"]["date"])
+        return finished
+
+    finished = _fetch_season_finished(season)
+
+    is_backtest = bool(before_date) and before_date <= date.today().isoformat()
+
+    if not is_backtest and len(finished) < count:
+        previous_season = _fetch_season_finished(season - 1)
+        needed = count - len(finished)
+        finished = previous_season[-needed:] + finished
+
     return finished[-count:]
 
 
