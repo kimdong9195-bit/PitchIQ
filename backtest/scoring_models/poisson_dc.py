@@ -117,13 +117,13 @@ class PoissonDixonColesModel(BaseScoringModel):
         self.last_max_goals_used = max_goals
         self.last_tail_probability = tail_probability
 
-        if negative_before_clip:
-            import warnings
-            warnings.warn(
-                f"score_matrix: 음수 확률이 발생해서 0으로 clip했습니다 "
-                f"(lambda_home={lambda_home:.3f}, lambda_away={lambda_away:.3f}, rho={rho}). "
-                f"이 rho/λ 조합은 validate_rho_nonnegative()로 사전 점검하는 걸 권장합니다."
-            )
+        # 주의: 이전 버전은 여기서 warnings.warn()으로 매번 경고를 찍었는데,
+        # 실전 데이터에서 이게 수만 번 발생하면서 로그를 과도하게 채워
+        # 실행 속도 저하 + GitHub Actions 로그 용량 초과 위험을 일으켰다.
+        # 이 정보는 이미 self.last_had_negative_clip과 각 예측 record의
+        # diagnostic_negative_clip_occurred 필드에 정상적으로 기록되므로,
+        # 화면에 매번 출력할 필요가 없어서 제거했다 (STEP10 최종 리포트의
+        # 8~9번 항목에서 집계된 형태로 확인 가능).
         return normalized
 
     def param_candidates(self) -> dict:
