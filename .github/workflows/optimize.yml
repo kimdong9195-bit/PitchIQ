@@ -1,0 +1,41 @@
+name: Collect Data and Run Optimization
+
+on:
+  workflow_dispatch:
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 필요한 패키지 설치
+        run: pip install requests
+
+      - name: EPL 4시즌 데이터 수집
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: python backtest/collect_data.py
+
+      - name: 데이터 품질 확인
+        run: python backtest/data_quality.py
+
+      - name: 최적화 실행 (STEP A -> STEP B)
+        run: python backtest/run_optimization.py
+
+      - name: 결과 업로드 (수집한 DB + 최적화 결과)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: optimization-results
+          path: |
+            optimization_results.json
+            historical_data.db
