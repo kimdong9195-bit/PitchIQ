@@ -19,9 +19,12 @@ backtest/walk_forward.py - STEP 10: Time-forward Walk-forward Backtesting
     하나하나를 정규화할 때 "그 경기 시점에는 몰랐을, 그러나 오늘(예측
     시점)까지는 이미 일어난" 같은 시즌 내 다른 경기 정보가 상대팀 지수에
     섞여 들어가는 형태의 근사다 (feature construction의 look-ahead 성격).
-    V2에서 완전 incremental 방식(과거 경기마다 그 시점 이전 데이터로만
-    상대팀 지수를 다시 계산)과 비교할 수 있도록, 상대팀 지수 계산 부분은
-    _compute_opponent_indices_snapshot()로 분리해뒀다 - 이 함수만 교체하면 됨.
+    실제 계산은 backtest/expected_goals.py의 compute_expected_goals()가
+    backtest/opponent_strength.py의 compute_iterative_team_indices()를
+    직접 호출하는 방식으로 되어 있다. V2에서 완전 incremental 방식(과거
+    경기마다 그 시점 이전 데이터로만 상대팀 지수를 다시 계산)으로 바꾸려면,
+    opponent_strength.py에 새 함수를 추가하고 expected_goals.py의 해당
+    import/호출부만 바꾸면 된다.
 """
 
 from typing import List, Optional
@@ -29,16 +32,6 @@ from typing import List, Optional
 from backtest import schema
 from backtest.expected_goals import compute_expected_goals
 from backtest.scoring_models.base import BaseScoringModel
-
-
-def _compute_opponent_indices_snapshot(matches: list, iterations: int):
-    """
-    V1 방식(as-of-date snapshot). 위 모듈 docstring에 적은 근사가 바로 이 함수에 있다.
-    V2에서 incremental 방식을 만들면 이 함수와 같은 시그니처로 별도 파일에
-    만들어서 교체하면 된다 (walk_forward 루프 본체는 안 건드려도 됨).
-    """
-    from backtest.opponent_strength import compute_iterative_team_indices
-    return compute_iterative_team_indices(matches, iterations=iterations)
 
 
 def _build_leakage_free_lineups(home_team_id: int, away_team_id: int, as_of_date: str) -> dict:
@@ -116,6 +109,9 @@ def predict_one_match(
     rho_safe = validate_rho_nonnegative(rho, lambda_home, lambda_away)
 
     score_matrix = model.score_matrix(lambda_home, lambda_away, params)
+    diagnostic_had_clip = getattr(model, "last_had_negative_clip", None)
+    diagnostic_max_goals = getattr(model, "last_max_goals_used", None)
+    diagnostic_tail_prob = getattr(model, "last_tail_probability", None)
 
     from backtest.markets import market_1x2, market_btts, market_over_under, market_handicap, market_home_goals, market_away_goals
     market_1x2_result = market_1x2(score_matrix)
@@ -145,6 +141,9 @@ def predict_one_match(
         "selected_home_advantage": params.get("home_advantage"),
         "selected_rho": rho,
         "rho_nonnegative_ok": rho_safe,
+        "diagnostic_negative_clip_occurred": diagnostic_had_clip,
+        "diagnostic_max_goals_used": diagnostic_max_goals,
+        "diagnostic_tail_probability": diagnostic_tail_prob,
 
         "actual_home_goals": fixture["home_goals"],
         "actual_away_goals": fixture["away_goals"],

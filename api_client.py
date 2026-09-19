@@ -148,3 +148,21 @@ def get_team_players(team_id: int, season: int) -> list:
     """시즌 선수별 통계 (득점, 출전시간 등) - 핵심 선수 goal_share 계산용"""
     data = _get("players", {"team": team_id, "season": season})
     return data.get("response", [])
+
+
+def get_league_fixtures(league_id: int, season: int) -> list:
+    """
+    특정 리그의 특정 시즌 전체 경기를 한 번에 가져온다 (백테스트용 대량 수집).
+    팀별로 나눠 부르는 것보다 훨씬 적은 요청으로 시즌 전체를 커버할 수 있다.
+    """
+    data = _get("fixtures", {"league": league_id, "season": season})
+    return data.get("response", [])
+
+
+def get_fixture_statistics(fixture_id: int) -> list:
+    """
+    한 경기의 팀별 통계(슈팅, 유효슈팅, 점유율, 코너킥 등).
+    경기가 안 끝났거나 이 리그/시즌에 통계 데이터가 없으면 빈 리스트가 올 수 있다.
+    """
+    data = _get("fixtures/statistics", {"fixture": fixture_id})
+    return data.get("response", [])

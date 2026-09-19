@@ -12,6 +12,7 @@ SQLite 동시 읽기: 각 워커 프로세스가 독립적으로 자기 커넥�
 
 import multiprocessing
 import os
+import time
 from typing import List
 
 from backtest.two_stage_optimize import evaluate_records, aggregate_metric
@@ -39,9 +40,20 @@ def run_grid_parallel(
     """
     n_workers = n_workers or os.cpu_count() or 4
     tasks = [(league_id, train_seasons, params, model) for params in param_grid]
+    total = len(tasks)
+
+    print(f"  [진행] 총 {total}개 조합, {n_workers}개 워커로 처리 시작...")
+    results = []
+    start = time.time()
 
     with multiprocessing.Pool(processes=n_workers) as pool:
-        results = pool.map(_evaluate_one_combo, tasks, chunksize=max(1, len(tasks) // (n_workers * 4)))
+        for i, result in enumerate(pool.imap_unordered(_evaluate_one_combo, tasks, chunksize=max(1, total // (n_workers * 8) or 1)), 1):
+            results.append(result)
+            if i % max(1, total // 20) == 0 or i == total:  # 대략 5%마다 출력
+                elapsed = time.time() - start
+                rate = i / elapsed if elapsed > 0 else 0
+                remaining = (total - i) / rate if rate > 0 else 0
+                print(f"  [진행] {i}/{total} ({i/total*100:.0f}%) - 경과 {elapsed/60:.1f}분, 예상잔여 {remaining/60:.1f}분")
 
     results.sort(key=lambda r: r["aggregate"])
     return results

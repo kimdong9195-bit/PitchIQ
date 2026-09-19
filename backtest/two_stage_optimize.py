@@ -108,6 +108,32 @@ def evaluate_records(records: list) -> dict:
     }
 
 
+def summarize_diagnostics(records: list) -> dict:
+    """
+    STEP10 요구사항 8/9번: rho로 인한 음수확률 clipping이 실제로 몇 번
+    발생했는지, max_goals(동적 격자 크기)가 실제로 어떻게 분포했는지,
+    tail probability(격자 밖으로 새는 확률)의 최댓값이 기준치(1e-8)를
+    실제로 잘 지켰는지를 전체 실행 결과에서 집계한다.
+    """
+    if not records:
+        return None
+    n = len(records)
+    clip_count = sum(1 for r in records if r.get("diagnostic_negative_clip_occurred"))
+    max_goals_values = [r["diagnostic_max_goals_used"] for r in records if r.get("diagnostic_max_goals_used") is not None]
+    tail_probs = [r["diagnostic_tail_probability"] for r in records if r.get("diagnostic_tail_probability") is not None]
+
+    return {
+        "n_predictions": n,
+        "negative_clip_occurred_count": clip_count,
+        "negative_clip_occurred_pct": clip_count / n * 100 if n else 0,
+        "max_goals_min": min(max_goals_values) if max_goals_values else None,
+        "max_goals_max": max(max_goals_values) if max_goals_values else None,
+        "max_goals_avg": sum(max_goals_values) / len(max_goals_values) if max_goals_values else None,
+        "tail_probability_max": max(tail_probs) if tail_probs else None,
+        "tail_probability_under_threshold": all(t < 1e-8 for t in tail_probs) if tail_probs else None,
+    }
+
+
 def aggregate_metric(evaluation: dict) -> float:
     """
     구조/파라미터 순위를 매기는 단일 집계지표.
@@ -123,7 +149,7 @@ def aggregate_metric(evaluation: dict) -> float:
     return sum(values) / len(values)
 
 
-TOP_N_FOR_FULL_GRID = 3  # 확정: 구조적 강건성 우선 (속도보다). 상위 3개 구조에 STEP B 풀그리드 적용
+TOP_N_FOR_FULL_GRID = 3  # 원래대로: 구조적 강건성 우선. 상위 3개 구조에 STEP B 풀그리드 적용
 SPOT_CHECK_PRESET_COUNT = 3  # 탈락 구조 교차검증에 쓸 프리셋 수
 
 

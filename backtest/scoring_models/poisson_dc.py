@@ -76,12 +76,24 @@ def validate_rho_nonnegative(rho: float, lambda_home: float, lambda_away: float)
 class PoissonDixonColesModel(BaseScoringModel):
     name = "poisson_dixon_coles_v1"
 
+    def __init__(self):
+        # 마지막 score_matrix() 호출의 진단 정보 (STEP10 요구사항 8/9번 - clipping
+        # 발생 여부, 실제 사용된 max_goals). walk_forward.py가 매 예측 직후
+        # 이 값을 읽어서 record에 남기고, 나중에 전체 실행에서 몇 번 발생했는지
+        # 집계할 수 있게 한다.
+        self.last_had_negative_clip = False
+        self.last_max_goals_used = None
+        self.last_tail_probability = None
+
     def score_matrix(
         self, lambda_home: float, lambda_away: float, params: dict, max_goals: int = None
     ) -> Dict[Tuple[int, int], float]:
         rho = params.get("rho", -0.13)
         if max_goals is None:
             max_goals = _sufficient_max_goals(lambda_home, lambda_away)
+
+        higher_lambda = max(lambda_home, lambda_away)
+        tail_probability = 1 - sum(_poisson_prob(higher_lambda, k) for k in range(max_goals + 1))
 
         matrix = {}
         negative_before_clip = False
@@ -91,7 +103,7 @@ class PoissonDixonColesModel(BaseScoringModel):
                 p *= _dixon_coles_tau(h, a, lambda_home, lambda_away, rho)
                 if p < 0:
                     negative_before_clip = True
-                    p = 0.0  # 음수 확률은 존재할 수 없으므로 0으로 clip (STEP10이 이 사례를 로그에 남겨야 함)
+                    p = 0.0
                 matrix[(h, a)] = p
 
         total = sum(matrix.values())
@@ -100,6 +112,10 @@ class PoissonDixonColesModel(BaseScoringModel):
 
         final_sum = sum(normalized.values())
         assert abs(final_sum - 1.0) < 1e-9, f"정규화 후 총합이 1이 아닙니다: {final_sum}"
+
+        self.last_had_negative_clip = negative_before_clip
+        self.last_max_goals_used = max_goals
+        self.last_tail_probability = tail_probability
 
         if negative_before_clip:
             import warnings
