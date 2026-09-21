@@ -14,7 +14,7 @@ dashboard.api-football.com에서 직접 가입한 경우 사용하는 버전입�
 
 import os
 import requests
-from datetime import date
+from datetime import date, datetime, timedelta
 
 BASE_URL = "https://v3.football.api-sports.io"
 
@@ -113,11 +113,32 @@ def get_injuries(team_id: int, season: int) -> list:
     return data.get("response", [])
 
 
+def _kst_date_to_utc_range(kst_date_str: str):
+    """
+    'YYYY-MM-DD' 형식의 한국시간(KST, UTC+9) 날짜를, 그 하루 전체가 걸치는
+    UTC 시간 범위로 변환한다. 사용자가 입력하는 날짜는 항상 한국 날짜
+    기준이라고 가정한다 (웹 화면에서 보는 날짜 그대로).
+
+    예: '2026-09-22' (한국시간 하루 전체)
+        -> UTC로는 2026-09-21 15:00:00 ~ 2026-09-22 14:59:59
+        (한국 자정 = UTC 전날 15시이므로)
+    """
+    kst_midnight = datetime.strptime(kst_date_str, "%Y-%m-%d")
+    utc_start = kst_midnight - timedelta(hours=9)
+    utc_end = utc_start + timedelta(days=1)
+    return utc_start, utc_end
+
+
 def find_fixture(team_a_id: int, team_b_id: int, target_date: str = None) -> dict:
     """
     두 팀의 특정 경기(fixture) 하나를 찾는다. 라인업 조회에 fixture id가 필요해서 쓴다.
 
-    target_date("YYYY-MM-DD")를 주면 그 날짜에 열린 경기를 찾는다 (과거 경기 백테스트용).
+    target_date("YYYY-MM-DD", 한국시간 기준)를 주면 그 날짜에 열린 경기를 찾는다.
+    API가 주는 경기 시각은 UTC라서, 단순 날짜 문자열 비교(예: "2026-09-22" == "2026-09-22")를
+    쓰면 한국시간 새벽~오전 킥오프 경기(UTC로는 전날 저녁~밤)를 못 찾는 문제가 있었다.
+    이제 한국 날짜를 UTC 시간 범위로 변환해서, 그 범위 안에 들어오는 실제 킥오프
+    시각을 가진 경기를 찾는 방식으로 고쳤다.
+
     안 주면 아직 시작 안 한(NS) 경기 중 가장 가까운 걸 찾는다 (실전 분석용).
     못 찾으면 None을 반환한다 (호출 쪽에서 "라인업 없음"으로 처리).
     """
@@ -125,8 +146,14 @@ def find_fixture(team_a_id: int, team_b_id: int, target_date: str = None) -> dic
     fixtures = data.get("response", [])
 
     if target_date:
+        utc_start, utc_end = _kst_date_to_utc_range(target_date)
         for f in fixtures:
-            if f["fixture"]["date"][:10] == target_date:
+            raw_date = f["fixture"]["date"]  # 예: "2026-09-21T19:00:00+00:00"
+            try:
+                fixture_dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00")).replace(tzinfo=None)
+            except (ValueError, TypeError):
+                continue
+            if utc_start <= fixture_dt < utc_end:
                 return f
         return None
 
