@@ -232,6 +232,39 @@ RELEGATION_CAUTION = 0.80
 RELEGATION_RHO = -0.30
 
 
+# ----------------------------
+# 6-1. 확률 보정 (Shrinkage) - 2025-26 holdout으로 검증 완료된 값
+#
+# STEP1~13 백테스트(backtest/ 폴더)에서 시장별로 독립적으로 alpha를 탐색하고,
+# 2023-24+2024-25 최적화 -> 2025-26 holdout 검증까지 거쳐 확정된 값이다.
+# 여기서는 그 결과값을 "그대로 가져다 쓰기만" 한다 - 이 파일 안에서 alpha를
+# 다시 추정하거나 조정하지 않는다 (재조정은 backtest/ 쪽에서만 일어난다).
+#
+# 공식: p' = center + alpha*(p-center)
+#   - 1X2처럼 K개 클래스가 서로 합해서 1이 되어야 하는 경우 center=1/K
+#     (K=3이면 1/3) -> 이러면 보정 후에도 자동으로 합계가 1로 유지된다
+#     (증명: sum[center + alpha*(p_c-center)] = K*center + alpha*(sum(p_c) - K*center)
+#            = 1 + alpha*(1-1) = 1, center=1/K일 때이므로 K*center=1)
+#   - BTTS/오버언더처럼 이진(둘 중 하나) 시장은 center=0.5
+#
+# Handicap은 alpha=1.00으로 확정되어(holdout에서도 변화 없음), 사실상
+# shrink(p, 1.0, ...) = p 항등식이라 여기서 별도 코드를 추가하지 않는다
+# (사용자 확인: "손대지 않고 원본 그대로 유지"로 결정됨).
+# ----------------------------
+SHRINKAGE_ALPHA_1X2 = 0.85    # center = 1/3
+SHRINKAGE_ALPHA_BTTS = 0.30   # center = 0.5
+SHRINKAGE_ALPHA_OU = 0.45     # center = 0.5
+
+
+def shrink(p: float, alpha: float, center: float = 0.5) -> float:
+    return center + alpha * (p - center)
+
+
+def _assert_sums_to_one(probs: dict, label: str):
+    total = sum(probs.values())
+    assert abs(total - 1.0) < 1e-9, f"{label} 확률 합이 1이 아닙니다: {total}"
+
+
 def dixon_coles_tau(h: int, a: int, home_lambda: float, away_lambda: float, rho: float) -> float:
     if h == 0 and a == 0:
         return 1 - (home_lambda * away_lambda * rho)
@@ -368,18 +401,44 @@ def analyze_match(
 
     result = match_outcome_probs(home_lambda, away_lambda, rho=rho)
     btts_yes, btts_no = btts_prob(result["score_matrix"])
-    dnb_home, dnb_away = draw_no_bet_prob(result)
+
+    # ---- 확률 보정 (Shrinkage) 적용 ----
+    # score_matrix/λ는 전혀 안 건드리고, 이미 계산이 끝난 "확률값"에만
+    # 사후적으로 적용한다. 이 지점 이후로는 result["home_win"] 등 원본값을
+    # 직접 쓰지 않고 아래 보정된 값(*_shrunk)만 쓴다.
+    home_win_shrunk = shrink(result["home_win"], SHRINKAGE_ALPHA_1X2, center=1 / 3)
+    draw_shrunk = shrink(result["draw"], SHRINKAGE_ALPHA_1X2, center=1 / 3)
+    away_win_shrunk = shrink(result["away_win"], SHRINKAGE_ALPHA_1X2, center=1 / 3)
+    _assert_sums_to_one(
+        {"home_win": home_win_shrunk, "draw": draw_shrunk, "away_win": away_win_shrunk}, "1X2(보정후)"
+    )
+
+    over_2_5_shrunk = shrink(result["over_2_5"], SHRINKAGE_ALPHA_OU, center=0.5)
+    under_2_5_shrunk = 1 - over_2_5_shrunk  # 이진쌍이라 한쪽만 보정하고 나머지는 1-x로 - 합계 자동 보장
+    _assert_sums_to_one({"over": over_2_5_shrunk, "under": under_2_5_shrunk}, "오버언더(보정후)")
+
+    btts_yes_shrunk = shrink(btts_yes, SHRINKAGE_ALPHA_BTTS, center=0.5)
+    btts_no_shrunk = 1 - btts_yes_shrunk
+    _assert_sums_to_one({"yes": btts_yes_shrunk, "no": btts_no_shrunk}, "BTTS(보정후)")
+
+    # DNB: 사용자 확인 결과 "보정된 1X2 값을 그대로 사용"으로 결정됨 -
+    # 기존처럼 result 딕셔너리 형태를 넘기되, 안의 값만 보정된 값으로 교체.
+    dnb_home, dnb_away = draw_no_bet_prob(
+        {"home_win": home_win_shrunk, "away_win": away_win_shrunk}
+    )
 
     # 특수 맥락이면 핸디캡 라인을 더 보수적으로(작게) 잡는다
     suggested_line = suggest_handicap_line(home_lambda, away_lambda)
     if is_special_context and abs(suggested_line) > 0.5:
         suggested_line = -0.5 if suggested_line < 0 else 0.5
+    # Handicap: 사용자 확인 결과 alpha=1.00(항등식)이라 "원본 그대로 유지"로 결정됨 - 보정 코드 추가 안 함
     h_cover, push, a_cover = handicap_prob(result["score_matrix"], suggested_line)
+    _assert_sums_to_one({"home": h_cover, "push": push, "away": a_cover}, "Handicap(원본, 무보정)")
 
     probs = {
-        "home_win": result["home_win"],
-        "draw": result["draw"],
-        "away_win": result["away_win"],
+        "home_win": home_win_shrunk,
+        "draw": draw_shrunk,
+        "away_win": away_win_shrunk,
     }
     top_outcome = max(probs, key=probs.get)
     top_confidence = probs[top_outcome]
@@ -394,8 +453,8 @@ def analyze_match(
             "confidence": round(top_confidence, 4),
         },
         "btts": {
-            "pick": "Yes" if btts_yes > btts_no else "No",
-            "confidence": round(max(btts_yes, btts_no), 4),
+            "pick": "Yes" if btts_yes_shrunk > btts_no_shrunk else "No",
+            "confidence": round(max(btts_yes_shrunk, btts_no_shrunk), 4),
         },
         "handicap": {
             "pick": f"{home.name} {suggested_line:+.1f}" if h_cover > a_cover else f"{away.name} {-suggested_line:+.1f}",
@@ -420,13 +479,13 @@ def analyze_match(
         "home_core_player_details": lambdas["home_core_player_details"],
         "away_core_player_details": lambdas["away_core_player_details"],
         "probabilities": {
-            "home_win": round(result["home_win"], 4),
-            "draw": round(result["draw"], 4),
-            "away_win": round(result["away_win"], 4),
-            "over_2_5": round(result["over_2_5"], 4),
-            "under_2_5": round(result["under_2_5"], 4),
-            "btts_yes": round(btts_yes, 4),
-            "btts_no": round(btts_no, 4),
+            "home_win": round(home_win_shrunk, 4),
+            "draw": round(draw_shrunk, 4),
+            "away_win": round(away_win_shrunk, 4),
+            "over_2_5": round(over_2_5_shrunk, 4),
+            "under_2_5": round(under_2_5_shrunk, 4),
+            "btts_yes": round(btts_yes_shrunk, 4),
+            "btts_no": round(btts_no_shrunk, 4),
         },
         "most_likely_scores": most_likely_scores(result["score_matrix"]),
         "handicap": {
