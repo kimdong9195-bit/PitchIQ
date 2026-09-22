@@ -8,6 +8,42 @@
   h1 { font-size: 22px; }
   form { background: #f5f5f7; padding: 20px; border-radius: 12px; margin-bottom: 24px; }
   label { display: block; font-size: 13px; color: #555; margin-top: 12px; }
+  .pitch {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: repeating-linear-gradient(to bottom, #3f9142, #3f9142 10%, #479a4a 10%, #479a4a 20%);
+    border: 2px solid #fff;
+    border-radius: 8px;
+    margin: 8px 0 16px;
+    overflow: hidden;
+  }
+  .pitch::before {
+    content: "";
+    position: absolute; left: 50%; top: 50%;
+    width: 60px; height: 60px; margin: -30px 0 0 -30px;
+    border: 2px solid rgba(255,255,255,0.6); border-radius: 50%;
+  }
+  .pitch::after {
+    content: "";
+    position: absolute; left: 50%; top: 0;
+    width: 0; border-left: 2px solid rgba(255,255,255,0.6); height: 100%;
+  }
+  .player-chip {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center;
+    width: 56px;
+    font-size: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    text-align: center;
+  }
+  .player-chip .num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(20,20,20,0.75); border: 1px solid rgba(255,255,255,0.8);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 12px; margin-bottom: 2px;
+  }
+  .pitch-team-label { font-size: 13px; font-weight: bold; margin: 12px 0 0; }
   input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
   button { margin-top: 16px; padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; }
   .error { color: #c0392b; background: #fdecea; padding: 12px; border-radius: 8px; }
@@ -260,8 +296,26 @@
     <div class="section-title">확정 라인업</div>
     {% if result.lineups %}
       {% for team_name, lineup in result.lineups.items() %}
-        <p style="margin-bottom:4px;"><b>{{ team_name }}</b> ({{ lineup.formation }})</p>
-        <p style="font-size:13px; color:#333; margin-top:0;">{{ lineup.starters | join(', ') }}</p>
+        <p class="pitch-team-label">{{ team_name }} ({{ lineup.formation }})</p>
+        <div class="pitch">
+          {% for p in lineup.starters %}
+            {% if p.top_pct is defined %}
+              <div class="player-chip" style="top: {{ p.top_pct }}%; left: {{ p.left_pct }}%;">
+                <div class="num">{{ p.number if p.number else '' }}</div>
+                <span>{{ p.name }}</span>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% set no_grid_players = lineup.starters | selectattr('top_pct', 'undefined') | list %}
+        {% if no_grid_players %}
+          <p style="font-size:12px; color:#888; margin-top:-8px;">
+            (좌표 정보 없음: {{ no_grid_players | map(attribute='name') | join(', ') }})
+          </p>
+        {% endif %}
+        {% if lineup.substitutes %}
+          <p style="font-size:12px; color:#666; margin-top:4px;">교체: {{ lineup.substitutes | join(', ') }}</p>
+        {% endif %}
       {% endfor %}
     {% else %}
       <p style="font-size:13px; color:#888;">
