@@ -145,21 +145,69 @@ def build_team(
     return Team(name=name, recent_matches=recent_matches, core_players=core_players)
 
 
+def _compute_pitch_positions(starters: list) -> list:
+    """
+    grid("행:열") 정보로 각 선수의 화면 상 위치(top%, left%)를 계산한다.
+    골키퍼(행=1)는 화면 아래쪽(자기 진영), 숫자가 큰 행(공격수)일수록
+    위쪽(상대 진영)에 배치한다. grid 정보가 없는 선수는 좌표 계산에서
+    제외한다 (그런 선수는 화면에 그리는 쪽에서 건너뛴다).
+    """
+    rows = {}
+    for p in starters:
+        grid = p.get("grid")
+        if not grid or ":" not in grid:
+            continue
+        try:
+            row, col = (int(x) for x in grid.split(":"))
+        except ValueError:
+            continue
+        rows.setdefault(row, []).append((col, p))
+
+    if not rows:
+        return starters
+
+    max_row = max(rows.keys())
+    positioned = []
+    for row, players in rows.items():
+        players.sort(key=lambda t: t[0])  # 실제 col 숫자 기준으로 순서만 맞추고, 배치는 균등 간격으로
+        n = len(players)
+        top_pct = 100 - (row / (max_row + 1)) * 100
+        for i, (_, p) in enumerate(players):
+            left_pct = (i + 1) / (n + 1) * 100
+            p = dict(p)
+            p["top_pct"] = round(top_pct, 1)
+            p["left_pct"] = round(left_pct, 1)
+            positioned.append(p)
+    return positioned
+
+
 def parse_lineups(lineup_data: list) -> dict:
     """
     api_client.get_lineup()의 결과를 화면에 보여줄 형태로 정리.
-    반환: {팀이름: {"formation": "4-2-3-1", "starters": [선수이름, ...], "substitutes": [...]}}
+    반환: {팀이름: {"formation": "4-2-3-1", "starters": [...], "substitutes": [이름,...]}}
+
+    starters의 각 원소는 {"name":..., "number":..., "pos":"G/D/M/F", "grid":"행:열",
+    "top_pct":.., "left_pct":..} 형태 - top_pct/left_pct는 축구장 다이어그램에
+    바로 쓸 수 있도록 미리 계산해둔 화면상 위치(%)다.
     아직 라인업이 발표 안 됐으면 lineup_data가 빈 리스트이고, 이 함수도 빈 dict를 반환한다.
     """
     result = {}
     for entry in lineup_data:
         team_name = entry["team"]["name"]
         formation = entry.get("formation") or "포메이션 미공개"
-        starters = [p["player"]["name"] for p in entry.get("startXI", [])]
+        starters = [
+            {
+                "name": p["player"]["name"],
+                "number": p["player"].get("number"),
+                "pos": p["player"].get("pos"),
+                "grid": p["player"].get("grid"),
+            }
+            for p in entry.get("startXI", [])
+        ]
         substitutes = [p["player"]["name"] for p in entry.get("substitutes", [])]
         result[team_name] = {
             "formation": formation,
-            "starters": starters,
+            "starters": _compute_pitch_positions(starters),
             "substitutes": substitutes,
         }
     return result
