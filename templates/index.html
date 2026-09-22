@@ -38,10 +38,10 @@
   {% else %}
   <form method="POST" action="/analyze">
     <label>홈팀 이름 (영문)</label>
-    <input type="text" name="team_a" list="team-list" value="{{ form_data.get('team_a', '') }}" required>
+    <input type="text" id="team_a" name="team_a" list="team-list" value="{{ form_data.get('team_a', '') }}" required>
 
     <label>원정팀 이름 (영문)</label>
-    <input type="text" name="team_b" list="team-list" value="{{ form_data.get('team_b', '') }}" required>
+    <input type="text" id="team_b" name="team_b" list="team-list" value="{{ form_data.get('team_b', '') }}" required>
     <p style="font-size:11px; color:#888; margin:2px 0 0 0;">몇 글자 입력하면 목록이 뜹니다. 목록에 없는 팀도 영문으로 직접 입력 가능해요.</p>
 
     <datalist id="team-list">
@@ -158,6 +158,21 @@
       <option value="Nice">
       <option value="Troyes">
       <option value="Le Mans">
+      <!-- 2026-27 챔피언스리그 참가팀 중 5대리그 외 소속 클럽 -->
+      <option value="PSV Eindhoven">
+      <option value="Feyenoord">
+      <option value="Sporting CP">
+      <option value="Porto">
+      <option value="Club Brugge">
+      <option value="Slavia Prague">
+      <option value="Galatasaray">
+      <option value="Fenerbahce">
+      <option value="Shakhtar Donetsk">
+      <option value="Bodo/Glimt">
+      <option value="AEK Athens">
+      <option value="Slovan Bratislava">
+      <option value="Viking FK">
+      <option value="LASK">
     </datalist>
     <p style="font-size:11px; color:#888; margin:2px 0 0 0;">현재 유럽 5대리그(EPL, 라리가, 세리에A, 분데스리가, 리그1) 팀 목록이 등록되어 있어요. 다른 리그 팀도 영문 이름으로 직접 입력하면 분석 가능합니다.</p>
 

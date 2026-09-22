@@ -16,6 +16,8 @@ import os
 import requests
 from datetime import date, datetime, timedelta
 
+import player_stats_cache
+
 BASE_URL = "https://v3.football.api-sports.io"
 
 
@@ -108,9 +110,109 @@ def get_head_to_head(team_a_id: int, team_b_id: int, count: int = 10, before_dat
 
 
 def get_injuries(team_id: int, season: int) -> list:
-    """현재 부상/결장 선수 목록"""
+    """현재 부상/결장 선수 목록 (실시간/미래 분석 전용 - '지금' 기준 부상자)"""
     data = _get("injuries", {"team": team_id, "season": season})
     return data.get("response", [])
+
+
+def is_historical_date(before_date: str) -> bool:
+    """
+    before_date가 실제 과거(오늘 포함) 날짜인지 판정한다. get_recent_fixtures의
+    is_backtest 판정과 동일한 기준을 쓴다 - 이 판정 하나로 "과거 시점 재현
+    분석"인지 "오늘/미래 실시간 분석"인지를 앱 전체에서 일관되게 나눈다.
+    """
+    return bool(before_date) and before_date <= date.today().isoformat()
+
+
+def get_all_season_fixtures_before(team_id: int, season: int, before_date: str) -> list:
+    """
+    get_recent_fixtures와 달리 개수 제한(count) 없이, 그 시즌에 그 팀이 치른
+    경기 중 before_date 이전에 끝난 경기를 전부 반환한다. 선수 시즌누적치를
+    과거 시점 기준으로 재구성할 때 "몇 경기까지"가 아니라 "그때까지의 전부"가
+    필요하므로 별도로 만들었다.
+    """
+    data = _get("fixtures", {"team": team_id, "season": season})
+    fixtures = data.get("response", [])
+    finished = [f for f in fixtures if f["fixture"]["status"]["short"] == "FT"]
+    if before_date:
+        finished = [f for f in finished if f["fixture"]["date"][:10] < before_date]
+    finished.sort(key=lambda f: f["fixture"]["date"])
+    return finished
+
+
+def get_fixture_player_stats(fixture_id: int, team_id: int = None) -> list:
+    """
+    /fixtures/players로 경기 하나의 선수별 통계(득점, 출전시간 등)를 가져온다.
+    끝난 경기의 개인기록은 다시 안 바뀌므로 영구 캐시를 먼저 확인한다 -
+    같은 fixture를 여러 번 요청해도 API를 다시 안 부른다.
+    team_id를 주면 그 팀 선수들의 블록만 걸러서 반환한다.
+    """
+    cached = player_stats_cache.get_cached_player_stats(fixture_id)
+    if cached is None:
+        data = _get("fixtures/players", {"fixture": fixture_id})
+        cached = data.get("response", [])
+        player_stats_cache.set_cached_player_stats(fixture_id, cached)
+
+    if team_id is None:
+        return cached
+    return [block for block in cached if block.get("team", {}).get("id") == team_id]
+
+
+def get_team_players_asof(team_id: int, season: int, before_date: str) -> list:
+    """
+    과거 시점 재현 전용: before_date 이전에 그 팀이 치른 모든 경기를 fixtures/players로
+    하나씩 모아 선수별로 직접 누적 합산해서, get_team_players()와 완전히 동일한
+    응답 형태(list of {"player":{...}, "statistics":[{"goals":{"total":N}, "games":{"minutes":M}}]})로
+    재구성한다. 이 형태를 그대로 유지해야 data_mapper.find_player_stats()를
+    수정 없이 재사용할 수 있다.
+
+    주의: 그 시즌 지금까지 치른 경기 수만큼 API 요청이 나간다 (fixture당 1회,
+    캐시로 재요청은 방지됨). 실시간/미래 분석에는 이 함수를 쓰지 않는다
+    (get_team_players()를 그대로 씀 - 요청량이 훨씬 적음).
+    """
+    fixtures = get_all_season_fixtures_before(team_id, season, before_date)
+
+    aggregated = {}  # player_id -> {"name":..., "goals":0, "minutes":0}
+    for fx in fixtures:
+        fixture_id = fx["fixture"]["id"]
+        team_blocks = get_fixture_player_stats(fixture_id, team_id=team_id)
+        for block in team_blocks:
+            for p in block.get("players", []):
+                stats_list = p.get("statistics") or []
+                if not stats_list:
+                    continue
+                stats = stats_list[0]
+                goals = (stats.get("goals") or {}).get("total") or 0
+                minutes = (stats.get("games") or {}).get("minutes") or 0
+                pid = p["player"]["id"]
+                name = p["player"]["name"]
+                if pid not in aggregated:
+                    aggregated[pid] = {"name": name, "goals": 0, "minutes": 0}
+                aggregated[pid]["goals"] += goals
+                aggregated[pid]["minutes"] += minutes
+
+    return [
+        {
+            "player": {"id": pid, "name": agg["name"]},
+            "statistics": [{"goals": {"total": agg["goals"]}, "games": {"minutes": agg["minutes"]}}],
+        }
+        for pid, agg in aggregated.items()
+    ]
+
+
+def get_injuries_for_fixture(fixture_id: int) -> list:
+    """
+    과거 시점 재현 전용: /injuries?fixture={id}로 '그 경기' 기준 결장자 명단을
+    가져온다 (현재 시점 전체 부상자 목록이 아니라, 그 경기 자체에 묶인 스냅샷).
+    양팀 선수가 섞여서 반환되는데, is_player_injured()는 이름으로만 찾으므로
+    양팀 어느 쪽에 써도 문제없다. 끝난 경기 기준이라 영구 캐시한다.
+    """
+    cached = player_stats_cache.get_cached_injuries(fixture_id)
+    if cached is None:
+        data = _get("injuries", {"fixture": fixture_id})
+        cached = data.get("response", [])
+        player_stats_cache.set_cached_injuries(fixture_id, cached)
+    return cached
 
 
 def _kst_date_to_utc_range(kst_date_str: str):

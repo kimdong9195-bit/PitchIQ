@@ -24,6 +24,7 @@ import data_mapper
 import db
 import mailer
 import predictor
+import prediction_log
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-this-in-production")
@@ -36,6 +37,7 @@ DEFAULT_DAILY_LIMIT = int(os.environ.get("DEFAULT_DAILY_LIMIT", 10))
 
 db.init_db()
 db.ensure_admin_from_env()
+prediction_log.init_prediction_tables()
 
 
 def login_required(view_func):
@@ -175,13 +177,30 @@ def analyze():
     today_usage = db.get_today_usage(user["id"])  # 방금 카운트 올라간 걸 반영
 
     before_date = match_date if match_date else None
+    is_historical = api_client.is_historical_date(before_date)
 
     try:
         # 1) 팀 검색
         team_a_info = api_client.search_team(team_a_name)
         team_b_info = api_client.search_team(team_b_name)
 
-        # 2) 최근 5경기, 상대전적, 부상정보, 선수 통계 수집
+        # 2) 목표 경기(fixture)를 먼저 확정한다.
+        #    과거 시점 분석(is_historical)이면, 이 fixture의 id가 부상정보를
+        #    "그 경기 기준"으로 정확히 가져오는 데 필요해서 순서를 앞으로 당겼다
+        #    (기존에는 라인업 조회 시점에만 찾았음).
+        lineups = {}
+        target_fixture = None
+        try:
+            target_fixture = api_client.find_fixture(team_a_info["id"], team_b_info["id"], target_date=before_date)
+            if target_fixture:
+                lineup_raw = api_client.get_lineup(target_fixture["fixture"]["id"])
+                lineups = data_mapper.parse_lineups(lineup_raw)
+        except Exception:
+            # 라인업 조회 실패는 전체 분석을 막을 이유가 없으므로 조용히 넘어간다
+            traceback.print_exc()
+            lineups = {}
+
+        # 3) 최근 5경기, 상대전적 수집 - 기존과 동일, before_date 필터 그대로 유지.
         #    match_date를 입력하면 그 날짜 "이전"에 끝난 경기만 대상으로 계산한다.
         #    (과거 경기를 백테스트할 때, 시즌 끝 무렵 폼이 아니라 그 경기 시점의
         #     진짜 최근 폼을 보기 위해 반드시 필요함)
@@ -189,12 +208,26 @@ def analyze():
         fixtures_b = api_client.get_recent_fixtures(team_b_info["id"], season=CURRENT_SEASON, count=5, before_date=before_date)
         h2h_raw = api_client.get_head_to_head(team_a_info["id"], team_b_info["id"], count=6, before_date=before_date)
 
-        players_a = api_client.get_team_players(team_a_info["id"], CURRENT_SEASON)
-        players_b = api_client.get_team_players(team_b_info["id"], CURRENT_SEASON)
-        injuries_a = api_client.get_injuries(team_a_info["id"], CURRENT_SEASON)
-        injuries_b = api_client.get_injuries(team_b_info["id"], CURRENT_SEASON)
+        # 4) 선수 시즌통계 / 부상정보 - 과거 시점 분석과 실시간/미래 분석을 명확히 분리.
+        #    과거 시점(is_historical=True)이면 "그 날짜 이전 누적치"를 fixtures/players로
+        #    직접 재구성하고, 부상정보도 "목표 경기 자체"에 묶인 스냅샷을 쓴다.
+        #    실시간/미래 분석(is_historical=False)은 기존 동작 그대로 - 절대 안 건드림.
+        if is_historical:
+            players_a = api_client.get_team_players_asof(team_a_info["id"], CURRENT_SEASON, before_date)
+            players_b = api_client.get_team_players_asof(team_b_info["id"], CURRENT_SEASON, before_date)
+            if target_fixture:
+                injuries_a = api_client.get_injuries_for_fixture(target_fixture["fixture"]["id"])
+                injuries_b = injuries_a  # 한 경기의 결장자 명단에 양팀이 섞여 나옴 - 이름으로만 대조하므로 문제없음
+            else:
+                # 목표 경기 자체를 못 찾은 예외 케이스 - 부상정보 없이 진행(임의로 만들어내지 않음)
+                injuries_a, injuries_b = [], []
+        else:
+            players_a = api_client.get_team_players(team_a_info["id"], CURRENT_SEASON)
+            players_b = api_client.get_team_players(team_b_info["id"], CURRENT_SEASON)
+            injuries_a = api_client.get_injuries(team_a_info["id"], CURRENT_SEASON)
+            injuries_b = api_client.get_injuries(team_b_info["id"], CURRENT_SEASON)
 
-        # 3) 우리 데이터 구조로 변환
+        # 5) 우리 데이터 구조로 변환 - data_mapper.py는 무수정 (입력 형태를 그대로 맞춰줬기 때문)
         home = data_mapper.build_team(
             name=team_a_info["name"], team_id=team_a_info["id"],
             fixtures=fixtures_a, players_data=players_a, injuries_data=injuries_a,
@@ -207,25 +240,22 @@ def analyze():
         )
         h2h_matches = data_mapper.h2h_to_h2h_matches(h2h_raw, team_a_info["id"])
 
-        # 3-1) 라인업 조회 (있으면). 실전 경기는 킥오프 1시간 전은 돼야 채워짐 -
-        #      그 전이면 lineups가 빈 dict로 남고, 화면에서 "아직 미발표"로 처리한다.
-        lineups = {}
-        try:
-            fixture = api_client.find_fixture(team_a_info["id"], team_b_info["id"], target_date=before_date)
-            if fixture:
-                lineup_raw = api_client.get_lineup(fixture["fixture"]["id"])
-                lineups = data_mapper.parse_lineups(lineup_raw)
-        except Exception:
-            # 라인업 조회 실패는 전체 분석을 막을 이유가 없으므로 조용히 넘어간다
-            traceback.print_exc()
-            lineups = {}
-
-        # 4) 예측 실행
+        # 6) 예측 실행 - predictor.py는 무수정 (날짜 개념 자체를 몰라도 되는 구조 그대로 유지)
         result = predictor.analyze_match(
             home, away, h2h_matches,
             title_race=title_race, local_derby=local_derby, relegation_battle=relegation_battle,
         )
         result["lineups"] = lineups
+
+        # 예측 기록 - target_fixture가 있으면(대부분의 경우) 그 fixture_id로 저장.
+        # 실패해도(DB 연결 문제 등) 분석 결과 표시 자체는 막지 않는다.
+        fixture_id_for_log = target_fixture["fixture"]["id"] if target_fixture else None
+        prediction_log.record_prediction(
+            fixture_id=fixture_id_for_log,
+            match_date=before_date,
+            home_team=team_a_info["name"], away_team=team_b_info["name"],
+            result=result,
+        )
 
         return render_template("index.html", result=result, error=None, form_data=form_data, user=user, today_usage=today_usage)
 
