@@ -356,6 +356,21 @@
     </p>
     {% endif %}
   </div>
+  {% elif team_rankings %}
+  <div class="result-box">
+    <h2>우리 모델이 잘 맞추는 팀 TOP5</h2>
+    <p style="font-size:12px; color:#888; margin-top:-8px;">
+      2023-24~2025-26 백테스트 기준, 그 팀 경기에서 예측이 실제 결과와 맞았던 비율입니다.
+    </p>
+    {% for market_key, label in [('1x2','승무패'), ('btts','BTTS'), ('o25','오버/언더 2.5'), ('handicap','핸디캡')] %}
+      {% if team_rankings.get(market_key) %}
+        <div class="section-title">{{ label }}</div>
+        {% for row in team_rankings[market_key] %}
+          <div class="row"><span>{{ loop.index }}. {{ row.team }}</span><span>{{ row.hit_rate }}% ({{ row.matches }}경기)</span></div>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  </div>
   {% endif %}
 </body>
 </html>
