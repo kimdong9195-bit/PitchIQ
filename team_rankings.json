@@ -1,0 +1,110 @@
+{
+  "1x2": [
+    {
+      "team": "Arsenal",
+      "hit_rate": 70.3,
+      "matches": 37
+    },
+    {
+      "team": "Fulham",
+      "hit_rate": 63.2,
+      "matches": 38
+    },
+    {
+      "team": "Burnley",
+      "hit_rate": 61.1,
+      "matches": 36
+    },
+    {
+      "team": "Manchester City",
+      "hit_rate": 60.5,
+      "matches": 38
+    },
+    {
+      "team": "West Ham",
+      "hit_rate": 59.5,
+      "matches": 37
+    }
+  ],
+  "btts": [
+    {
+      "team": "Manchester United",
+      "hit_rate": 71.1,
+      "matches": 38
+    },
+    {
+      "team": "Burnley",
+      "hit_rate": 69.4,
+      "matches": 36
+    },
+    {
+      "team": "Liverpool",
+      "hit_rate": 68.4,
+      "matches": 38
+    },
+    {
+      "team": "Chelsea",
+      "hit_rate": 68.4,
+      "matches": 38
+    },
+    {
+      "team": "Bournemouth",
+      "hit_rate": 63.2,
+      "matches": 38
+    }
+  ],
+  "o25": [
+    {
+      "team": "Liverpool",
+      "hit_rate": 60.5,
+      "matches": 38
+    },
+    {
+      "team": "Nottingham Forest",
+      "hit_rate": 60.5,
+      "matches": 38
+    },
+    {
+      "team": "Chelsea",
+      "hit_rate": 60.5,
+      "matches": 38
+    },
+    {
+      "team": "Manchester United",
+      "hit_rate": 60.5,
+      "matches": 38
+    },
+    {
+      "team": "Manchester City",
+      "hit_rate": 57.9,
+      "matches": 38
+    }
+  ],
+  "handicap": [
+    {
+      "team": "Tottenham",
+      "hit_rate": 89.2,
+      "matches": 37
+    },
+    {
+      "team": "Crystal Palace",
+      "hit_rate": 84.2,
+      "matches": 38
+    },
+    {
+      "team": "Bournemouth",
+      "hit_rate": 81.6,
+      "matches": 38
+    },
+    {
+      "team": "Chelsea",
+      "hit_rate": 81.6,
+      "matches": 38
+    },
+    {
+      "team": "Brighton",
+      "hit_rate": 78.9,
+      "matches": 38
+    }
+  ]
+}
