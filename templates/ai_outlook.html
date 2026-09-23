@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>AI 팀 전망 - PitchIQ</title>
+<style>
+  :root {
+    --bg: #ffffff; --text: #1a1a1a; --box-bg: #ffffff; --border: #eeeeee;
+    --form-bg: #f5f5f7; --muted: #888888; --muted2: #666666; --row-border: #f0f0f0;
+    --accent: #0070f3; --warn-bg: #fff8e1;
+  }
+  [data-theme="dark"] {
+    --bg: #121212; --text: #eaeaea; --box-bg: #1e1e1e; --border: #333333;
+    --form-bg: #1a1a1a; --muted: #999999; --muted2: #aaaaaa; --row-border: #2a2a2a;
+    --accent: #4da3ff; --warn-bg: #3a3320;
+  }
+  * { transition: background-color 0.7s ease, color 0.7s ease, border-color 0.7s ease; }
+  body { font-family: -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: var(--text); background: var(--bg); }
+  h1 { font-size: 22px; }
+  a { color: var(--accent); }
+  .disclaimer-box {
+    background: var(--warn-bg); border-radius: 10px; padding: 14px 16px;
+    font-size: 13px; line-height: 1.6; margin-bottom: 20px; color: var(--text);
+  }
+  .sample-note {
+    font-size: 12px; color: var(--muted); background: var(--form-bg);
+    border-radius: 8px; padding: 8px 12px; margin-bottom: 16px;
+  }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-btn {
+    background: var(--form-bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 13px; padding: 8px 14px; cursor: pointer;
+  }
+  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .tab-context { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .outlook-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 4px; border-bottom: 1px solid var(--row-border); font-size: 14px;
+  }
+  .outlook-row .rank { color: var(--muted); width: 24px; }
+  .outlook-row .team { font-weight: 600; flex: 1; }
+  .outlook-row .value { font-weight: 700; color: var(--accent); }
+  .outlook-row .remaining { font-size: 11px; color: var(--muted); margin-left: 6px; }
+  .theme-toggle {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 12px; padding: 4px 10px; cursor: pointer;
+  }
+</style>
+<script>
+  (function () {
+    var saved = localStorage.getItem('pitchiq-theme');
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+  function toggleTheme() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('pitchiq-theme', 'light'); }
+    else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('pitchiq-theme', 'dark'); }
+  }
+  function showTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(function (el) { el.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function (el) { el.classList.remove('active'); });
+    document.getElementById('panel-' + name).classList.add('active');
+    document.getElementById('btn-' + name).classList.add('active');
+  }
+</script>
+</head>
+<body>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h1>📊 AI 팀 전망</h1>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <a href="/" style="font-size:13px;">← 경기 분석으로</a>
+      <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 화면모드</button>
+    </div>
+  </div>
+
+  {% if not outlook %}
+    <p style="color:var(--muted);">
+      아직 AI 팀 전망 데이터가 없습니다. (compute_team_outlook.py가 실행된 뒤에 표시됩니다)
+    </p>
+  {% else %}
+    <div class="disclaimer-box">
+      ⚠️ {{ outlook.disclaimer }}
+    </div>
+    <div class="sample-note">
+      시즌 초반에는 표본이 적어 변동성이 클 수 있습니다. 경기 데이터가 누적될수록 지표의 안정성이 높아집니다.
+      (현재 팀당 평균 {{ outlook.avg_matches_played }}경기 진행됨)
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="btn-1x2" onclick="showTab('1x2')">승무패</button>
+      <button class="tab-btn" id="btn-btts" onclick="showTab('btts')">BTTS</button>
+      <button class="tab-btn" id="btn-o25" onclick="showTab('o25')">O/U</button>
+      <button class="tab-btn" id="btn-handicap" onclick="showTab('handicap')">핸디캡</button>
+      <button class="tab-btn" id="btn-score" onclick="showTab('score')">득점</button>
+    </div>
+
+    <div class="tab-panel active" id="panel-1x2">
+      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 기대승점(Expected Points) 순위</div>
+      {% for row in outlook['1x2'] %}
+        <div class="outlook-row">
+          <span class="rank">{{ loop.index }}</span>
+          <span class="team">{{ row.team }}</span>
+          <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="tab-panel" id="panel-btts">
+      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 BTTS(양팀득점) Yes 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
+      {% for row in outlook.btts %}
+        <div class="outlook-row">
+          <span class="rank">{{ loop.index }}</span>
+          <span class="team">{{ row.team }}</span>
+          <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="tab-panel" id="panel-o25">
+      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 오버 2.5골 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
+      {% for row in outlook.o25 %}
+        <div class="outlook-row">
+          <span class="rank">{{ loop.index }}</span>
+          <span class="team">{{ row.team }}</span>
+          <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="tab-panel" id="panel-handicap">
+      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 핸디캡 커버 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
+      {% for row in outlook.handicap %}
+        <div class="outlook-row">
+          <span class="rank">{{ loop.index }}</span>
+          <span class="team">{{ row.team }}</span>
+          <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="tab-panel" id="panel-score">
+      <div class="tab-context">EPL 잔여경기 기준 · venue별(홈경기만/원정경기만) 평균 예상득점(λ)</div>
+      <div style="font-weight:bold; margin:10px 0 4px;">홈 득점 전망</div>
+      {% for row in outlook.score_home %}
+        <div class="outlook-row">
+          <span class="rank">{{ loop.index }}</span>
+          <span class="team">{{ row.team }}</span>
+          <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 홈 {{ row.remaining }}경기</span></span>
+        </div>
+      {% endfor %}
+      <div style="font-weight:bold; margin:16px 0 4px;">원정 득점 전망</div>
+      {% for row in outlook.score_away %}
+        <div class="outlook-row">
+          <span class="rank">{{ loop.index }}</span>
+          <span class="team">{{ row.team }}</span>
+          <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 원정 {{ row.remaining }}경기</span></span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</body>
+</html>
