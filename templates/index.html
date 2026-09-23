@@ -51,13 +51,17 @@
     width: 240px;
     max-height: 90vh;
     overflow-y: auto;
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    padding: 16px;
   }
   .rankings-sidebar h3 { font-size: 14px; margin: 0 0 4px; }
   .rankings-sidebar p.sub { font-size: 11px; color: #888; margin: 0 0 10px; }
+  .rankings-box {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .rankings-box h4 { font-size: 12px; margin: 0 0 6px; color: #0070f3; }
   .rankings-sidebar .rank-item { font-size: 12px; padding: 3px 0; border-bottom: 1px solid #f5f5f5; }
   .rankings-sidebar .rank-item .name { font-weight: 600; }
   .rankings-sidebar .rank-item .stat { color: #666; }
@@ -80,13 +84,15 @@
     <p class="sub">2026-27 시즌 기준, 시장별 적중률 TOP5</p>
     {% for market_key, label in [('1x2','승무패'), ('btts','BTTS'), ('o25','오버/언더'), ('handicap','핸디캡')] %}
       {% if team_rankings.get(market_key) %}
-        <div class="section-title" style="margin-top:14px; margin-bottom:4px; font-size:12px;">{{ label }}</div>
-        {% for row in team_rankings[market_key] %}
-          <div class="rank-item">
-            <span class="name">{{ loop.index }}. {{ row.team }}</span><br>
-            <span class="stat">{{ row.hit_rate }}%</span>
-          </div>
-        {% endfor %}
+        <div class="rankings-box">
+          <h4>{{ label }}</h4>
+          {% for row in team_rankings[market_key] %}
+            <div class="rank-item">
+              <span class="name">{{ loop.index }}. {{ row.team }}</span><br>
+              <span class="stat">{{ row.hit_rate }}%</span>
+            </div>
+          {% endfor %}
+        </div>
       {% endif %}
     {% endfor %}
   </div>
