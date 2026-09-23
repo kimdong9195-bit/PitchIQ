@@ -128,10 +128,9 @@
 </script>
 </head>
 <body>
-  {% if team_rankings %}
+  {% if team_rankings and user %}
   <div class="rankings-sidebar">
-    <h3>우리 모델이 잘 맞추는 팀</h3>
-    <p class="sub">2026-27 시즌 기준, 시장별 적중률 TOP5</p>
+    <h3>2026-27 시즌 기준, 시장별 적중률 TOP5</h3>
     {% for market_key, label in [('1x2','승무패'), ('btts','BTTS'), ('o25','오버/언더'), ('handicap','핸디캡')] %}
       {% if team_rankings.get(market_key) %}
         <div class="rankings-box">
