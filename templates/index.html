@@ -84,7 +84,7 @@
         {% for row in team_rankings[market_key] %}
           <div class="rank-item">
             <span class="name">{{ loop.index }}. {{ row.team }}</span><br>
-            <span class="stat">{{ row.hit_rate }}% ({{ row.matches }}경기)</span>
+            <span class="stat">{{ row.hit_rate }}%</span>
           </div>
         {% endfor %}
       {% endif %}
