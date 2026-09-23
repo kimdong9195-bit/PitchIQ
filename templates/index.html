@@ -44,6 +44,26 @@
     font-weight: bold; font-size: 12px; margin-bottom: 2px;
   }
   .pitch-team-label { font-size: 13px; font-weight: bold; margin: 12px 0 0; }
+  .rankings-sidebar {
+    position: fixed;
+    left: 20px;
+    top: 40px;
+    width: 240px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .rankings-sidebar h3 { font-size: 14px; margin: 0 0 4px; }
+  .rankings-sidebar p.sub { font-size: 11px; color: #888; margin: 0 0 10px; }
+  .rankings-sidebar .rank-item { font-size: 12px; padding: 3px 0; border-bottom: 1px solid #f5f5f5; }
+  .rankings-sidebar .rank-item .name { font-weight: 600; }
+  .rankings-sidebar .rank-item .stat { color: #666; }
+  @media (max-width: 1150px) {
+    .rankings-sidebar { display: none; }  /* 화면이 좁으면(노트북/모바일) 본문과 겹치니 숨김 */
+  }
   input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
   button { margin-top: 16px; padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; }
   .error { color: #c0392b; background: #fdecea; padding: 12px; border-radius: 8px; }
@@ -54,6 +74,24 @@
 </style>
 </head>
 <body>
+  {% if team_rankings %}
+  <div class="rankings-sidebar">
+    <h3>우리 모델이 잘 맞추는 팀</h3>
+    <p class="sub">2026-27 시즌 기준, 시장별 적중률 TOP5</p>
+    {% for market_key, label in [('1x2','승무패'), ('btts','BTTS'), ('o25','오버/언더'), ('handicap','핸디캡')] %}
+      {% if team_rankings.get(market_key) %}
+        <div class="section-title" style="margin-top:14px; margin-bottom:4px; font-size:12px;">{{ label }}</div>
+        {% for row in team_rankings[market_key] %}
+          <div class="rank-item">
+            <span class="name">{{ loop.index }}. {{ row.team }}</span><br>
+            <span class="stat">{{ row.hit_rate }}% ({{ row.matches }}경기)</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <div style="display:flex; justify-content:space-between; align-items:center;">
     <h1>⚽ PitchIQ</h1>
     {% if user %}
@@ -355,28 +393,6 @@
       환불 개념으로 취급하는 마켓이에요.
     </p>
     {% endif %}
-  </div>
-  {% elif team_rankings %}
-  <div class="result-box">
-    <h2>우리 모델이 잘 맞추는 팀 TOP5</h2>
-    <p style="font-size:12px; color:#888; margin-top:-8px;">
-      2025-26 시즌 기준, 그 팀 경기에서 예측이 실제 결과와 맞았던 비율입니다.
-    </p>
-    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:12px;">
-      {% for market_key, label in [('1x2','승무패'), ('btts','BTTS'), ('o25','오버/언더'), ('handicap','핸디캡')] %}
-        {% if team_rankings.get(market_key) %}
-          <div>
-            <div class="section-title" style="margin-bottom:6px;">{{ label }}</div>
-            {% for row in team_rankings[market_key] %}
-              <div style="font-size:12px; padding:4px 0; border-bottom:1px solid #f0f0f0;">
-                <div style="font-weight:600;">{{ loop.index }}. {{ row.team }}</div>
-                <div style="color:#666;">{{ row.hit_rate }}% ({{ row.matches }}경기)</div>
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endfor %}
-    </div>
   </div>
   {% endif %}
 </body>
