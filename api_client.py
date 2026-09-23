@@ -215,6 +215,28 @@ def get_injuries_for_fixture(fixture_id: int) -> list:
     return cached
 
 
+def get_fixture_result(fixture_id: int) -> dict:
+    """
+    성능 모니터링 전용: 특정 fixture가 끝났는지, 끝났으면 최종 스코어가
+    몇 대 몇인지 조회한다. 진행중이거나 예정인 경기는 is_finished=False로
+    돌려준다 (호출부가 "아직 안 끝났으니 다음에 다시 확인" 처리하도록).
+    """
+    data = _get("fixtures", {"id": fixture_id})
+    response = data.get("response", [])
+    if not response:
+        return {"is_finished": False, "home_goals": None, "away_goals": None}
+
+    fixture = response[0]
+    status = fixture["fixture"]["status"]["short"]
+    is_finished = status == "FT"
+    goals = fixture.get("goals", {})
+    return {
+        "is_finished": is_finished,
+        "home_goals": goals.get("home") if is_finished else None,
+        "away_goals": goals.get("away") if is_finished else None,
+    }
+
+
 def _kst_date_to_utc_range(kst_date_str: str):
     """
     'YYYY-MM-DD' 형식의 한국시간(KST, UTC+9) 날짜를, 그 하루 전체가 걸치는
