@@ -160,6 +160,9 @@
       {% else %}
         <div style="font-size:13px;"><a href="/login">로그인</a> / <a href="/signup">회원가입</a></div>
       {% endif %}
+      {% if user %}
+        <a href="/ai-outlook" style="font-size:13px;">📊 AI 팀 전망</a>
+      {% endif %}
       <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 화면모드</button>
     </div>
   </div>
