@@ -71,6 +71,15 @@ def load_team_rankings():
         return None
 
 
+def load_team_outlook():
+    """compute_team_outlook.py가 만든 team_outlook.json을 읽어온다."""
+    try:
+        with open("team_outlook.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
 @app.route("/", methods=["GET"])
 def index():
     user = current_user()
@@ -79,6 +88,14 @@ def index():
         "index.html", result=None, error=None, form_data={}, user=user, today_usage=today_usage,
         team_rankings=load_team_rankings(),
     )
+
+
+@app.route("/ai-outlook", methods=["GET"])
+@login_required
+def ai_outlook():
+    user = current_user()
+    outlook = load_team_outlook()
+    return render_template("ai_outlook.html", outlook=outlook, user=user)
 
 
 @app.route("/signup", methods=["GET", "POST"])

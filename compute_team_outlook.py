@@ -119,22 +119,33 @@ def main():
     def avg(lst):
         return sum(lst) / len(lst) if lst else None
 
-    outlook = {"1x2": [], "btts": [], "o25": [], "handicap": [], "score_home": [], "score_away": []}
+    outlook = {
+        "disclaimer": (
+            "이 순위는 실제 EPL 순위가 아니라, 남은 EPL 일정에 대한 AI 분석 전망입니다. "
+            "BTTS/오버언더/핸디캡은 팀 자체의 절대적인 능력치가 아니라, 잔여 일정의 "
+            "상대팀 전력과 홈/원정 조건에 따라 달라지는 상대적 지표입니다."
+        ),
+        # 20팀 x 38경기 기준으로 "팀당 평균 몇 경기 치렀는지" 역산 - 시즌이
+        # 얼마나 진행됐는지 화면에 보여주기 위한 값 (표본 크기 체감용).
+        "avg_matches_played": round(38 - (len(unique_fixtures) * 2 / max(len(teams), 1)), 1),
+        "1x2": [], "btts": [], "o25": [], "handicap": [], "score_home": [], "score_away": [],
+    }
 
     for team, agg in team_agg.items():
-        outlook["1x2"].append({"team": team, "value": round(agg["xp"], 2), "remaining": agg["remaining"]})
+        remaining = agg["remaining"]
+        outlook["1x2"].append({"team": team, "value": round(agg["xp"] / remaining, 2), "remaining": remaining})
         if agg["btts"]:
-            outlook["btts"].append({"team": team, "value": round(avg(agg["btts"]) * 100, 1), "remaining": agg["remaining"]})
+            outlook["btts"].append({"team": team, "value": round(avg(agg["btts"]) * 100, 1), "remaining": remaining})
         if agg["o25"]:
-            outlook["o25"].append({"team": team, "value": round(avg(agg["o25"]) * 100, 1), "remaining": agg["remaining"]})
+            outlook["o25"].append({"team": team, "value": round(avg(agg["o25"]) * 100, 1), "remaining": remaining})
         if agg["hcap"]:
-            outlook["handicap"].append({"team": team, "value": round(avg(agg["hcap"]) * 100, 1), "remaining": agg["remaining"]})
+            outlook["handicap"].append({"team": team, "value": round(avg(agg["hcap"]) * 100, 1), "remaining": remaining})
         if agg["lambda_home"]:
             outlook["score_home"].append({"team": team, "value": round(avg(agg["lambda_home"]), 2), "remaining": len(agg["lambda_home"])})
         if agg["lambda_away"]:
             outlook["score_away"].append({"team": team, "value": round(avg(agg["lambda_away"]), 2), "remaining": len(agg["lambda_away"])})
 
-    for key in outlook:
+    for key in ["1x2", "btts", "o25", "handicap", "score_home", "score_away"]:
         outlook[key].sort(key=lambda r: r["value"], reverse=True)
 
     with open("team_outlook.json", "w", encoding="utf-8") as f:
