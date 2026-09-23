@@ -1,0 +1,615 @@
+{
+  "disclaimer": "이 순위는 실제 EPL 순위가 아니라, 남은 EPL 일정에 대한 AI 분석 전망입니다. BTTS/오버언더/핸디캡은 팀 자체의 절대적인 능력치가 아니라, 잔여 일정의 상대팀 전력과 홈/원정 조건에 따라 달라지는 상대적 지표입니다.",
+  "1x2": [
+    {
+      "team": "Manchester City",
+      "value": 2.23,
+      "remaining": 33
+    },
+    {
+      "team": "Liverpool",
+      "value": 1.96,
+      "remaining": 33
+    },
+    {
+      "team": "Brighton",
+      "value": 1.91,
+      "remaining": 33
+    },
+    {
+      "team": "Crystal Palace",
+      "value": 1.87,
+      "remaining": 33
+    },
+    {
+      "team": "Brentford",
+      "value": 1.68,
+      "remaining": 33
+    },
+    {
+      "team": "Bournemouth",
+      "value": 1.62,
+      "remaining": 33
+    },
+    {
+      "team": "Everton",
+      "value": 1.57,
+      "remaining": 33
+    },
+    {
+      "team": "Aston Villa",
+      "value": 1.55,
+      "remaining": 33
+    },
+    {
+      "team": "Arsenal",
+      "value": 1.51,
+      "remaining": 33
+    },
+    {
+      "team": "Manchester United",
+      "value": 1.39,
+      "remaining": 33
+    },
+    {
+      "team": "Newcastle",
+      "value": 1.32,
+      "remaining": 33
+    },
+    {
+      "team": "Leeds",
+      "value": 1.3,
+      "remaining": 33
+    },
+    {
+      "team": "Chelsea",
+      "value": 1.25,
+      "remaining": 33
+    },
+    {
+      "team": "Fulham",
+      "value": 1.24,
+      "remaining": 33
+    },
+    {
+      "team": "Nottingham Forest",
+      "value": 1.05,
+      "remaining": 33
+    },
+    {
+      "team": "Sunderland",
+      "value": 1.01,
+      "remaining": 33
+    },
+    {
+      "team": "Hull City",
+      "value": 0.98,
+      "remaining": 33
+    },
+    {
+      "team": "Tottenham",
+      "value": 0.84,
+      "remaining": 33
+    },
+    {
+      "team": "Ipswich",
+      "value": 0.8,
+      "remaining": 33
+    },
+    {
+      "team": "Coventry",
+      "value": 0.56,
+      "remaining": 33
+    }
+  ],
+  "btts": [
+    {
+      "team": "Chelsea",
+      "value": 57.9,
+      "remaining": 33
+    },
+    {
+      "team": "Aston Villa",
+      "value": 54.9,
+      "remaining": 33
+    },
+    {
+      "team": "Leeds",
+      "value": 54.8,
+      "remaining": 33
+    },
+    {
+      "team": "Ipswich",
+      "value": 54.5,
+      "remaining": 33
+    },
+    {
+      "team": "Brighton",
+      "value": 54.5,
+      "remaining": 33
+    },
+    {
+      "team": "Manchester United",
+      "value": 53.8,
+      "remaining": 33
+    },
+    {
+      "team": "Newcastle",
+      "value": 53.7,
+      "remaining": 33
+    },
+    {
+      "team": "Arsenal",
+      "value": 53.1,
+      "remaining": 33
+    },
+    {
+      "team": "Bournemouth",
+      "value": 53.1,
+      "remaining": 33
+    },
+    {
+      "team": "Sunderland",
+      "value": 53.1,
+      "remaining": 33
+    },
+    {
+      "team": "Manchester City",
+      "value": 51.8,
+      "remaining": 33
+    },
+    {
+      "team": "Crystal Palace",
+      "value": 51.7,
+      "remaining": 33
+    },
+    {
+      "team": "Brentford",
+      "value": 51.6,
+      "remaining": 33
+    },
+    {
+      "team": "Fulham",
+      "value": 51.4,
+      "remaining": 33
+    },
+    {
+      "team": "Tottenham",
+      "value": 50.3,
+      "remaining": 33
+    },
+    {
+      "team": "Hull City",
+      "value": 48.4,
+      "remaining": 33
+    },
+    {
+      "team": "Nottingham Forest",
+      "value": 48.1,
+      "remaining": 33
+    },
+    {
+      "team": "Coventry",
+      "value": 46.5,
+      "remaining": 33
+    },
+    {
+      "team": "Liverpool",
+      "value": 46.2,
+      "remaining": 33
+    },
+    {
+      "team": "Everton",
+      "value": 44.7,
+      "remaining": 33
+    }
+  ],
+  "o25": [
+    {
+      "team": "Chelsea",
+      "value": 65.3,
+      "remaining": 33
+    },
+    {
+      "team": "Ipswich",
+      "value": 62.1,
+      "remaining": 33
+    },
+    {
+      "team": "Brighton",
+      "value": 61.0,
+      "remaining": 33
+    },
+    {
+      "team": "Manchester City",
+      "value": 60.3,
+      "remaining": 33
+    },
+    {
+      "team": "Aston Villa",
+      "value": 59.8,
+      "remaining": 33
+    },
+    {
+      "team": "Leeds",
+      "value": 59.3,
+      "remaining": 33
+    },
+    {
+      "team": "Newcastle",
+      "value": 57.2,
+      "remaining": 33
+    },
+    {
+      "team": "Manchester United",
+      "value": 56.9,
+      "remaining": 33
+    },
+    {
+      "team": "Sunderland",
+      "value": 56.4,
+      "remaining": 33
+    },
+    {
+      "team": "Bournemouth",
+      "value": 56.0,
+      "remaining": 33
+    },
+    {
+      "team": "Arsenal",
+      "value": 55.6,
+      "remaining": 33
+    },
+    {
+      "team": "Crystal Palace",
+      "value": 55.3,
+      "remaining": 33
+    },
+    {
+      "team": "Brentford",
+      "value": 53.7,
+      "remaining": 33
+    },
+    {
+      "team": "Tottenham",
+      "value": 53.6,
+      "remaining": 33
+    },
+    {
+      "team": "Fulham",
+      "value": 52.6,
+      "remaining": 33
+    },
+    {
+      "team": "Coventry",
+      "value": 52.4,
+      "remaining": 33
+    },
+    {
+      "team": "Hull City",
+      "value": 47.5,
+      "remaining": 33
+    },
+    {
+      "team": "Liverpool",
+      "value": 46.6,
+      "remaining": 33
+    },
+    {
+      "team": "Nottingham Forest",
+      "value": 46.3,
+      "remaining": 33
+    },
+    {
+      "team": "Everton",
+      "value": 39.7,
+      "remaining": 33
+    }
+  ],
+  "handicap": [
+    {
+      "team": "Leeds",
+      "value": 47.2,
+      "remaining": 33
+    },
+    {
+      "team": "Coventry",
+      "value": 47.2,
+      "remaining": 33
+    },
+    {
+      "team": "Chelsea",
+      "value": 46.4,
+      "remaining": 33
+    },
+    {
+      "team": "Sunderland",
+      "value": 45.8,
+      "remaining": 33
+    },
+    {
+      "team": "Newcastle",
+      "value": 45.4,
+      "remaining": 33
+    },
+    {
+      "team": "Hull City",
+      "value": 45.2,
+      "remaining": 33
+    },
+    {
+      "team": "Ipswich",
+      "value": 45.1,
+      "remaining": 33
+    },
+    {
+      "team": "Manchester United",
+      "value": 45.1,
+      "remaining": 33
+    },
+    {
+      "team": "Tottenham",
+      "value": 45.1,
+      "remaining": 33
+    },
+    {
+      "team": "Nottingham Forest",
+      "value": 44.5,
+      "remaining": 33
+    },
+    {
+      "team": "Fulham",
+      "value": 44.5,
+      "remaining": 33
+    },
+    {
+      "team": "Bournemouth",
+      "value": 43.8,
+      "remaining": 33
+    },
+    {
+      "team": "Brighton",
+      "value": 43.8,
+      "remaining": 33
+    },
+    {
+      "team": "Crystal Palace",
+      "value": 43.6,
+      "remaining": 33
+    },
+    {
+      "team": "Aston Villa",
+      "value": 42.9,
+      "remaining": 33
+    },
+    {
+      "team": "Arsenal",
+      "value": 42.7,
+      "remaining": 33
+    },
+    {
+      "team": "Manchester City",
+      "value": 41.5,
+      "remaining": 33
+    },
+    {
+      "team": "Brentford",
+      "value": 41.4,
+      "remaining": 33
+    },
+    {
+      "team": "Everton",
+      "value": 40.5,
+      "remaining": 33
+    },
+    {
+      "team": "Liverpool",
+      "value": 40.3,
+      "remaining": 33
+    }
+  ],
+  "score_home": [
+    {
+      "team": "Manchester City",
+      "value": 3.42,
+      "remaining": 16
+    },
+    {
+      "team": "Brighton",
+      "value": 3.2,
+      "remaining": 16
+    },
+    {
+      "team": "Chelsea",
+      "value": 2.52,
+      "remaining": 17
+    },
+    {
+      "team": "Aston Villa",
+      "value": 2.41,
+      "remaining": 17
+    },
+    {
+      "team": "Crystal Palace",
+      "value": 2.36,
+      "remaining": 17
+    },
+    {
+      "team": "Bournemouth",
+      "value": 2.21,
+      "remaining": 16
+    },
+    {
+      "team": "Leeds",
+      "value": 2.02,
+      "remaining": 16
+    },
+    {
+      "team": "Brentford",
+      "value": 2.0,
+      "remaining": 16
+    },
+    {
+      "team": "Liverpool",
+      "value": 1.98,
+      "remaining": 17
+    },
+    {
+      "team": "Arsenal",
+      "value": 1.95,
+      "remaining": 17
+    },
+    {
+      "team": "Newcastle",
+      "value": 1.92,
+      "remaining": 16
+    },
+    {
+      "team": "Manchester United",
+      "value": 1.86,
+      "remaining": 17
+    },
+    {
+      "team": "Ipswich",
+      "value": 1.48,
+      "remaining": 17
+    },
+    {
+      "team": "Fulham",
+      "value": 1.47,
+      "remaining": 16
+    },
+    {
+      "team": "Sunderland",
+      "value": 1.46,
+      "remaining": 17
+    },
+    {
+      "team": "Everton",
+      "value": 1.16,
+      "remaining": 16
+    },
+    {
+      "team": "Tottenham",
+      "value": 1.05,
+      "remaining": 16
+    },
+    {
+      "team": "Hull City",
+      "value": 1.01,
+      "remaining": 17
+    },
+    {
+      "team": "Nottingham Forest",
+      "value": 0.96,
+      "remaining": 16
+    },
+    {
+      "team": "Coventry",
+      "value": 0.63,
+      "remaining": 17
+    }
+  ],
+  "score_away": [
+    {
+      "team": "Manchester City",
+      "value": 2.92,
+      "remaining": 17
+    },
+    {
+      "team": "Brighton",
+      "value": 2.4,
+      "remaining": 17
+    },
+    {
+      "team": "Chelsea",
+      "value": 2.06,
+      "remaining": 16
+    },
+    {
+      "team": "Crystal Palace",
+      "value": 2.0,
+      "remaining": 16
+    },
+    {
+      "team": "Aston Villa",
+      "value": 1.94,
+      "remaining": 16
+    },
+    {
+      "team": "Brentford",
+      "value": 1.75,
+      "remaining": 17
+    },
+    {
+      "team": "Arsenal",
+      "value": 1.7,
+      "remaining": 16
+    },
+    {
+      "team": "Bournemouth",
+      "value": 1.67,
+      "remaining": 17
+    },
+    {
+      "team": "Manchester United",
+      "value": 1.64,
+      "remaining": 16
+    },
+    {
+      "team": "Leeds",
+      "value": 1.62,
+      "remaining": 17
+    },
+    {
+      "team": "Liverpool",
+      "value": 1.52,
+      "remaining": 16
+    },
+    {
+      "team": "Newcastle",
+      "value": 1.47,
+      "remaining": 17
+    },
+    {
+      "team": "Fulham",
+      "value": 1.24,
+      "remaining": 17
+    },
+    {
+      "team": "Ipswich",
+      "value": 1.23,
+      "remaining": 16
+    },
+    {
+      "team": "Sunderland",
+      "value": 1.18,
+      "remaining": 16
+    },
+    {
+      "team": "Everton",
+      "value": 1.0,
+      "remaining": 17
+    },
+    {
+      "team": "Tottenham",
+      "value": 0.89,
+      "remaining": 17
+    },
+    {
+      "team": "Nottingham Forest",
+      "value": 0.87,
+      "remaining": 17
+    },
+    {
+      "team": "Hull City",
+      "value": 0.77,
+      "remaining": 16
+    },
+    {
+      "team": "Coventry",
+      "value": 0.53,
+      "remaining": 16
+    }
+  ]
+}
