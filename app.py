@@ -13,6 +13,7 @@ app.py - 축구 픽 예측 웹 서비스 (MVP, EPL 중심)
 배포는 README.md 참고 (Render.com 무료 티어 기준 안내 포함)
 """
 
+import json
 import os
 import traceback
 from functools import wraps
@@ -56,11 +57,28 @@ def current_user():
     return db.get_user_by_id(user_id)
 
 
+def load_team_rankings():
+    """
+    backtest/compute_team_rankings.py가 미리 만들어둔 team_rankings.json을
+    읽어서 반환한다. 파일이 없거나(아직 안 만들었거나) 깨져있으면 None을
+    반환해서, 템플릿 쪽에서 이 섹션 자체를 조용히 안 보여주게 한다
+    (에러 화면 뜨는 것보다 그게 낫다고 판단).
+    """
+    try:
+        with open("team_rankings.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
 @app.route("/", methods=["GET"])
 def index():
     user = current_user()
     today_usage = db.get_today_usage(user["id"]) if user else None
-    return render_template("index.html", result=None, error=None, form_data={}, user=user, today_usage=today_usage)
+    return render_template(
+        "index.html", result=None, error=None, form_data={}, user=user, today_usage=today_usage,
+        team_rankings=load_team_rankings(),
+    )
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -166,13 +184,13 @@ def analyze():
     today_usage = db.get_today_usage(user["id"])
 
     if not team_a_name or not team_b_name:
-        return render_template("index.html", result=None, error="두 팀 이름을 모두 입력해주세요.", form_data=form_data, user=user, today_usage=today_usage)
+        return render_template("index.html", result=None, error="두 팀 이름을 모두 입력해주세요.", form_data=form_data, user=user, today_usage=today_usage, team_rankings=load_team_rankings())
 
     if not db.check_and_increment_usage(user["id"], user["daily_limit"]):
         return render_template(
             "index.html", result=None,
             error=f"하루 분석 한도({user['daily_limit']}회)를 다 쓰셨습니다. 내일 다시 시도해주세요.",
-            form_data=form_data, user=user, today_usage=today_usage,
+            form_data=form_data, user=user, today_usage=today_usage, team_rankings=load_team_rankings(),
         )
     today_usage = db.get_today_usage(user["id"])  # 방금 카운트 올라간 걸 반영
 
@@ -257,14 +275,14 @@ def analyze():
             result=result,
         )
 
-        return render_template("index.html", result=result, error=None, form_data=form_data, user=user, today_usage=today_usage)
+        return render_template("index.html", result=result, error=None, form_data=form_data, user=user, today_usage=today_usage, team_rankings=load_team_rankings())
 
     except Exception as e:
         traceback.print_exc()
         return render_template(
             "index.html", result=None,
             error=f"분석 중 오류가 발생했습니다: {e}",
-            form_data=form_data, user=user, today_usage=today_usage,
+            form_data=form_data, user=user, today_usage=today_usage, team_rankings=load_team_rankings(),
         )
 
 
