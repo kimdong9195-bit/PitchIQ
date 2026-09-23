@@ -51,9 +51,35 @@ def search_team(name: str) -> dict:
     return results[0]["team"]  # {"id":..., "name":..., "country":..., ...}
 
 
+def _is_friendly(fixture: dict) -> bool:
+    """
+    친선경기 여부 판정. API-Football은 친선경기를 리그이름에
+    'Friendlies'라고 표시한다 (국가대표 친선/클럽 친선 등 이름이 조금씩
+    다를 수 있어서 'friend'가 들어가면 전부 친선으로 본다 - 이 정도로도
+    실제 정식대회(리그/컵/챔스 등) 이름과 겹칠 일은 없다).
+    """
+    league_name = (fixture.get("league") or {}).get("name", "")
+    return "friend" in league_name.lower()
+
+
+def _fetch_season_finished(team_id: int, season_year: int, before_date: str = None) -> list:
+    """
+    특정 팀의 특정 시즌 "끝난 경기"를 가져오는 공통 로직. 친선경기는 항상
+    제외한다 (실력 반영이 안 되는 경기라 최근폼/H2H/선수통계 어디에도
+    섞이면 안 됨). 리그/컵/챔스 등 정식 대회는 전부 포함한다.
+    """
+    data = _get("fixtures", {"team": team_id, "season": season_year})
+    fixtures = data.get("response", [])
+    fixtures = [f for f in fixtures if not _is_friendly(f)]
+    finished = [f for f in fixtures if f["fixture"]["status"]["short"] == "FT"]
+    if before_date:
+        finished = [f for f in finished if f["fixture"]["date"][:10] < before_date]
+    return finished
+
+
 def get_recent_fixtures(team_id: int, season: int, count: int = 5, before_date: str = None) -> list:
     """
-    해당 팀의 최근 N경기 결과를 반환 (모든 대회 포함).
+    해당 팀의 최근 N경기 결과를 반환 (친선경기 제외, 그 외 모든 정식대회 포함).
 
     무료 플랜은 'last' 파라미터를 못 쓰기 때문에, 시즌 전체 경기를 받아온 뒤
     끝난 경기(FT)만 걸러서 날짜순으로 정렬, 최근 N개만 잘라내는 방식으로 우회한다.
@@ -72,21 +98,17 @@ def get_recent_fixtures(team_id: int, season: int, count: int = 5, before_date: 
     미래 날짜라면(=아직 안 열린 경기를 예측하려는 것) 날짜를 안 준 것과 똑같이
     취급해서 보충을 적용한다.
     """
-    def _fetch_season_finished(season_year):
-        data = _get("fixtures", {"team": team_id, "season": season_year})
-        fixtures = data.get("response", [])
-        finished = [f for f in fixtures if f["fixture"]["status"]["short"] == "FT"]
-        if before_date:
-            finished = [f for f in finished if f["fixture"]["date"][:10] < before_date]
+    def _fetch(season_year):
+        finished = _fetch_season_finished(team_id, season_year, before_date)
         finished.sort(key=lambda f: f["fixture"]["date"])
         return finished
 
-    finished = _fetch_season_finished(season)
+    finished = _fetch(season)
 
     is_backtest = bool(before_date) and before_date <= date.today().isoformat()
 
     if not is_backtest and len(finished) < count:
-        previous_season = _fetch_season_finished(season - 1)
+        previous_season = _fetch(season - 1)
         needed = count - len(finished)
         finished = previous_season[-needed:] + finished
 
@@ -95,13 +117,14 @@ def get_recent_fixtures(team_id: int, season: int, count: int = 5, before_date: 
 
 def get_head_to_head(team_a_id: int, team_b_id: int, count: int = 10, before_date: str = None) -> list:
     """
-    두 팀의 상대전적 최근 N경기.
+    두 팀의 상대전적 최근 N경기 (친선경기 제외).
     'last' 파라미터가 무료 플랜에서 막혀있을 수 있어 전체를 받아 직접 자른다.
 
     before_date: 지정하면 그 날짜 이전 맞대결만 카운트 (분석 시점 기준 진짜 상대전적).
     """
     data = _get("fixtures/headtohead", {"h2h": f"{team_a_id}-{team_b_id}"})
     fixtures = data.get("response", [])
+    fixtures = [f for f in fixtures if not _is_friendly(f)]
     finished = [f for f in fixtures if f["fixture"]["status"]["short"] == "FT"]
     if before_date:
         finished = [f for f in finished if f["fixture"]["date"][:10] < before_date]
@@ -127,15 +150,11 @@ def is_historical_date(before_date: str) -> bool:
 def get_all_season_fixtures_before(team_id: int, season: int, before_date: str) -> list:
     """
     get_recent_fixtures와 달리 개수 제한(count) 없이, 그 시즌에 그 팀이 치른
-    경기 중 before_date 이전에 끝난 경기를 전부 반환한다. 선수 시즌누적치를
-    과거 시점 기준으로 재구성할 때 "몇 경기까지"가 아니라 "그때까지의 전부"가
-    필요하므로 별도로 만들었다.
+    경기 중 before_date 이전에 끝난 경기를 전부 반환한다 (친선경기 제외).
+    선수 시즌누적치를 과거 시점 기준으로 재구성할 때 "몇 경기까지"가 아니라
+    "그때까지의 전부"가 필요하므로 별도로 만들었다.
     """
-    data = _get("fixtures", {"team": team_id, "season": season})
-    fixtures = data.get("response", [])
-    finished = [f for f in fixtures if f["fixture"]["status"]["short"] == "FT"]
-    if before_date:
-        finished = [f for f in finished if f["fixture"]["date"][:10] < before_date]
+    finished = _fetch_season_finished(team_id, season, before_date)
     finished.sort(key=lambda f: f["fixture"]["date"])
     return finished
 
