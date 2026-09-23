@@ -4,10 +4,40 @@
 <meta charset="UTF-8">
 <title>PitchIQ</title>
 <style>
-  body { font-family: -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #1a1a1a; }
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --box-bg: #ffffff;
+    --border: #eeeeee;
+    --form-bg: #f5f5f7;
+    --muted: #888888;
+    --muted2: #666666;
+    --row-border: #f0f0f0;
+    --accent: #0070f3;
+    --error-bg: #fdecea;
+    --warn-bg: #fff8e1;
+  }
+  [data-theme="dark"] {
+    --bg: #121212;
+    --text: #eaeaea;
+    --box-bg: #1e1e1e;
+    --border: #333333;
+    --form-bg: #1a1a1a;
+    --muted: #999999;
+    --muted2: #aaaaaa;
+    --row-border: #2a2a2a;
+    --accent: #4da3ff;
+    --error-bg: #3a1f1f;
+    --warn-bg: #3a3320;
+  }
+  body { font-family: -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: var(--text); background: var(--bg); }
+  .theme-toggle {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 12px; padding: 4px 10px; cursor: pointer;
+  }
   h1 { font-size: 22px; }
-  form { background: #f5f5f7; padding: 20px; border-radius: 12px; margin-bottom: 24px; }
-  label { display: block; font-size: 13px; color: #555; margin-top: 12px; }
+  form { background: var(--form-bg); padding: 20px; border-radius: 12px; margin-bottom: 24px; }
+  label { display: block; font-size: 13px; color: var(--muted2); margin-top: 12px; }
   .pitch {
     position: relative;
     width: 100%;
@@ -53,29 +83,49 @@
     overflow-y: auto;
   }
   .rankings-sidebar h3 { font-size: 14px; margin: 0 0 4px; }
-  .rankings-sidebar p.sub { font-size: 11px; color: #888; margin: 0 0 10px; }
+  .rankings-sidebar p.sub { font-size: 11px; color: var(--muted); margin: 0 0 10px; }
   .rankings-box {
-    background: #fff;
-    border: 1px solid #eee;
+    background: var(--box-bg);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 10px;
   }
-  .rankings-box h4 { font-size: 12px; margin: 0 0 6px; color: #0070f3; }
-  .rankings-sidebar .rank-item { font-size: 12px; padding: 3px 0; border-bottom: 1px solid #f5f5f5; }
+  .rankings-box h4 { font-size: 12px; margin: 0 0 6px; color: var(--accent); }
+  .rankings-sidebar .rank-item { font-size: 12px; padding: 3px 0; border-bottom: 1px solid var(--row-border); }
   .rankings-sidebar .rank-item .name { font-weight: 600; }
-  .rankings-sidebar .rank-item .stat { color: #666; }
+  .rankings-sidebar .rank-item .stat { color: var(--muted2); }
   @media (max-width: 1150px) {
     .rankings-sidebar { display: none; }  /* 화면이 좁으면(노트북/모바일) 본문과 겹치니 숨김 */
   }
-  input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-  button { margin-top: 16px; padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; }
-  .error { color: #c0392b; background: #fdecea; padding: 12px; border-radius: 8px; }
-  .result-box { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 20px; }
-  .pick { font-weight: bold; color: #0070f3; }
-  .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+  input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
+  button { margin-top: 16px; padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; }
+  .error { color: #c0392b; background: var(--error-bg); padding: 12px; border-radius: 8px; }
+  .result-box { background: var(--box-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .pick { font-weight: bold; color: var(--accent); }
+  .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--row-border); }
   .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 8px; }
 </style>
+<script>
+  // 페이지가 그려지기 전에 먼저 실행해서, 저장된 테마로 바로 렌더링되게 함
+  // (안 그러면 잠깐 밝은 화면이 보였다가 다크로 바뀌는 깜빡임이 생김)
+  (function () {
+    var saved = localStorage.getItem('pitchiq-theme');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+  function toggleTheme() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('pitchiq-theme', 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('pitchiq-theme', 'dark');
+    }
+  }
+</script>
 </head>
 <body>
   {% if team_rankings %}
@@ -100,19 +150,22 @@
 
   <div style="display:flex; justify-content:space-between; align-items:center;">
     <h1>⚽ PitchIQ</h1>
-    {% if user %}
-      <div style="font-size:13px; color:#555;">
-        {{ user.email }}{% if user.is_admin %} (관리자){% endif %}
-        · 오늘 사용량: {{ today_usage }}{% if user.daily_limit is not none %}/{{ user.daily_limit }}{% else %}/무제한{% endif %}
-        · <a href="/logout">로그아웃</a>
-      </div>
-    {% else %}
-      <div style="font-size:13px;"><a href="/login">로그인</a> / <a href="/signup">회원가입</a></div>
-    {% endif %}
+    <div style="display:flex; align-items:center; gap:10px;">
+      {% if user %}
+        <div style="font-size:13px; color:var(--muted2);">
+          {{ user.email }}{% if user.is_admin %} (관리자){% endif %}
+          · 오늘 사용량: {{ today_usage }}{% if user.daily_limit is not none %}/{{ user.daily_limit }}{% else %}/무제한{% endif %}
+          · <a href="/logout">로그아웃</a>
+        </div>
+      {% else %}
+        <div style="font-size:13px;"><a href="/login">로그인</a> / <a href="/signup">회원가입</a></div>
+      {% endif %}
+      <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 화면모드</button>
+    </div>
   </div>
 
   {% if not user %}
-    <p style="background:#fff8e1; padding:16px; border-radius:8px; font-size:14px;">
+    <p style="background:var(--warn-bg); padding:16px; border-radius:8px; font-size:14px;">
       분석 기능을 쓰려면 먼저 <a href="/login">로그인</a>하거나 <a href="/signup">회원가입</a>해주세요.
     </p>
   {% else %}
@@ -122,7 +175,7 @@
 
     <label>원정팀 이름 (영문)</label>
     <input type="text" id="team_b" name="team_b" list="team-list" value="{{ form_data.get('team_b', '') }}" required>
-    <p style="font-size:11px; color:#888; margin:2px 0 0 0;">몇 글자 입력하면 목록이 뜹니다. 목록에 없는 팀도 영문으로 직접 입력 가능해요.</p>
+    <p style="font-size:11px; color:var(--muted); margin:2px 0 0 0;">몇 글자 입력하면 목록이 뜹니다. 목록에 없는 팀도 영문으로 직접 입력 가능해요.</p>
 
     <datalist id="team-list">
       <!-- 2026-27 시즌 프리미어리그 20개 클럽 -->
@@ -254,7 +307,7 @@
       <option value="Viking FK">
       <option value="LASK">
     </datalist>
-    <p style="font-size:11px; color:#888; margin:2px 0 0 0;">현재 유럽 5대리그(EPL, 라리가, 세리에A, 분데스리가, 리그1) 팀 목록이 등록되어 있어요. 다른 리그 팀도 영문 이름으로 직접 입력하면 분석 가능합니다.</p>
+    <p style="font-size:11px; color:var(--muted); margin:2px 0 0 0;">현재 유럽 5대리그(EPL, 라리가, 세리에A, 분데스리가, 리그1) 팀 목록이 등록되어 있어요. 다른 리그 팀도 영문 이름으로 직접 입력하면 분석 가능합니다.</p>
 
     <label>홈팀 핵심 선수 (선택)</label>
     <input type="text" name="core_player_a" value="{{ form_data.get('core_player_a', '') }}">
@@ -265,7 +318,7 @@
     <label>경기 날짜 (선택, 과거 경기 검증용 - 비워두면 시즌 최신 기준)</label>
     <input type="date" name="match_date" value="{{ form_data.get('match_date', '') }}">
 
-    <p style="font-size:11px; color:#888; margin-top:16px; margin-bottom:0;">
+    <p style="font-size:11px; color:var(--muted); margin-top:16px; margin-bottom:0;">
       아래 항목은 여러 개 동시에 체크할 수 있습니다. 체크 시 <b>득점 감소율은 서로 곱해지고</b>,
       <b>무승부 보정값은 체크한 항목 중 가장 센 값 하나만</b> 적용됩니다 (더해지지 않음).
     </p>
@@ -274,7 +327,7 @@
       <input type="checkbox" name="title_race" style="width:auto;" {% if form_data.get('title_race') %}checked{% endif %}>
       타이틀경쟁 / 상위권 맞대결
     </label>
-    <p style="font-size:11px; color:#888; margin:2px 0 0 24px;">
+    <p style="font-size:11px; color:var(--muted); margin:2px 0 0 24px;">
       * 기본값과 다른 점: 예상 득점을 <b>15% 낮추고</b>(x0.85), 무승부 보정값을 기본(-0.13)에서
       <b>-0.30</b>으로 강하게 적용합니다.<br>
       * 이유: 실력이 비슷한 상위권 팀끼리는 서로 실수를 피하려 신중하게 플레이해서,
@@ -285,7 +338,7 @@
       <input type="checkbox" name="local_derby" style="width:auto;" {% if form_data.get('local_derby') %}checked{% endif %}>
       지역 더비 / 라이벌전
     </label>
-    <p style="font-size:11px; color:#888; margin:2px 0 0 24px;">
+    <p style="font-size:11px; color:var(--muted); margin:2px 0 0 24px;">
       * 기본값과 다른 점: 예상 득점은 <b>그대로 유지</b>하고, 무승부 보정값만 기본(-0.13)에서
       <b>-0.35</b>로 (세 항목 중 가장 강하게) 적용합니다.<br>
       * 이유: 감정적으로 격해지는 더비는 화끈한 대승이 나올 때도 있어서 득점 자체를
@@ -297,7 +350,7 @@
       <input type="checkbox" name="relegation_battle" style="width:auto;" {% if form_data.get('relegation_battle') %}checked{% endif %}>
       강등권 다툼
     </label>
-    <p style="font-size:11px; color:#888; margin:2px 0 0 24px;">
+    <p style="font-size:11px; color:var(--muted); margin:2px 0 0 24px;">
       * 기본값과 다른 점: 예상 득점을 <b>20% 낮추고</b>(x0.80), 무승부 보정값을 기본(-0.13)에서
       <b>-0.30</b>으로 강하게 적용합니다.<br>
       * 이유: 팀 실력 자체가 낮은데 져서는 안 된다는 긴장감까지 더해져서, 결정적인
@@ -353,16 +406,16 @@
         </div>
         {% set no_grid_players = lineup.starters | selectattr('top_pct', 'undefined') | list %}
         {% if no_grid_players %}
-          <p style="font-size:12px; color:#888; margin-top:-8px;">
+          <p style="font-size:12px; color:var(--muted); margin-top:-8px;">
             (좌표 정보 없음: {{ no_grid_players | map(attribute='name') | join(', ') }})
           </p>
         {% endif %}
         {% if lineup.substitutes %}
-          <p style="font-size:12px; color:#666; margin-top:4px;">교체: {{ lineup.substitutes | join(', ') }}</p>
+          <p style="font-size:12px; color:var(--muted2); margin-top:4px;">교체: {{ lineup.substitutes | join(', ') }}</p>
         {% endif %}
       {% endfor %}
     {% else %}
-      <p style="font-size:13px; color:#888;">
+      <p style="font-size:13px; color:var(--muted);">
         아직 라인업이 발표되지 않았습니다. 실전 경기는 보통 킥오프 1시간 전쯤 확정 라인업이 나옵니다.
         (과거 경기를 날짜 지정해서 분석하는 경우인데도 안 뜬다면, 해당 경기의 상세 데이터가
         API에 없는 것일 수 있습니다.)
@@ -393,7 +446,7 @@
     <div class="row"><span>BTTS</span><span class="pick">{{ result.picks.btts.pick }} ({{ (result.picks.btts.confidence * 100) | round(1) }}%)</span></div>
     <div class="row"><span>핸디캡</span><span class="pick">{{ result.picks.handicap.pick }} ({{ (result.picks.handicap.confidence * 100) | round(1) }}%)</span></div>
     {% if result.match_context.is_special_context %}
-    <p style="font-size:12px; color:#888; margin-top:12px;">
+    <p style="font-size:12px; color:var(--muted); margin-top:12px;">
       빅매치는 승무패를 억지로 찍기보다, 위의 '무승부 제외(DNB)'나 '핸디캡' 픽이
       더 안전한 참고 지표입니다. 무승부가 나오면 DNB는 적중도 실패도 아닌
       환불 개념으로 취급하는 마켓이에요.
