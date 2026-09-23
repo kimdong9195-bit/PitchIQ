@@ -267,12 +267,15 @@ def analyze():
 
         # 예측 기록 - target_fixture가 있으면(대부분의 경우) 그 fixture_id로 저장.
         # 실패해도(DB 연결 문제 등) 분석 결과 표시 자체는 막지 않는다.
+        # kickoff_time은 target_fixture의 실제 API 킥오프 시각을 그대로 넘긴다 -
+        # 나중에 "경기 시작 전 마지막 예측"을 정확히 가려낼 때 이 값이 기준이 된다.
         fixture_id_for_log = target_fixture["fixture"]["id"] if target_fixture else None
+        kickoff_time_for_log = target_fixture["fixture"]["date"] if target_fixture else None
         prediction_log.record_prediction(
             fixture_id=fixture_id_for_log,
             match_date=before_date,
             home_team=team_a_info["name"], away_team=team_b_info["name"],
-            result=result,
+            result=result, prediction_type="match_analysis", kickoff_time=kickoff_time_for_log,
         )
 
         return render_template("index.html", result=result, error=None, form_data=form_data, user=user, today_usage=today_usage, team_rankings=load_team_rankings())

@@ -32,7 +32,12 @@ def actual_outcome_1x2(hg: int, ag: int) -> str:
 
 
 def main():
-    rows = prediction_log.get_predictions_with_results()
+    # 중요: prediction_type='match_analysis'로 명시적으로 좁혀서, AI 팀 전망
+    # 배치(team_outlook)가 만든 예측이 일반 분석 성능통계에 섞이지 않게 한다.
+    # get_latest_snapshot_per_fixture는 기본적으로 "킥오프 이전에 만들어진 것 중
+    # 가장 최근 스냅샷"만 돌려주므로 (require_pre_kickoff=True 기본값), 경기
+    # 시작 이후 생성된 스냅샷이나 같은 경기의 예전 재분석 스냅샷은 자동으로 제외된다.
+    rows = prediction_log.get_latest_snapshot_per_fixture(prediction_type="match_analysis")
     resolved = [r for r in rows if r.get("actual_home_goals") is not None]
 
     print(f"전체 예측 스냅샷 수: {len(rows)}")

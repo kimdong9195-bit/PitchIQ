@@ -72,6 +72,7 @@ def init_prediction_tables():
                         away_team TEXT NOT NULL,
                         prediction_timestamp TEXT NOT NULL,
                         model_version TEXT NOT NULL REFERENCES model_versions(version),
+                        prediction_type TEXT NOT NULL DEFAULT 'match_analysis',
                         lambda_home REAL,
                         lambda_away REAL,
                         prob_home_win REAL,
@@ -87,6 +88,21 @@ def init_prediction_tables():
                         prob_handicap_away REAL,
                         most_likely_scores_json TEXT
                     )
+                """)
+                # 기존에 이미 만들어진 테이블에는 CREATE TABLE IF NOT EXISTS가 안 먹히므로,
+                # prediction_type 컬럼이 없는 예전 테이블에는 여기서 추가해준다.
+                # 기존 행들은 전부 실제로 'match_analysis'였으므로 DEFAULT로 정확히 채워진다.
+                cur.execute("""
+                    ALTER TABLE predictions
+                    ADD COLUMN IF NOT EXISTS prediction_type TEXT NOT NULL DEFAULT 'match_analysis'
+                """)
+                # 킥오프 정확한 시각(ISO, timezone 포함) - "그 경기 시작 전 마지막 예측"을
+                # 정확히 가려내려면 날짜(match_date)만으로는 부족해서 추가함.
+                # 예전에 만들어진 행은 이 값이 NULL - get_latest_snapshot_per_fixture()에서
+                # NULL인 경우는 "판정 불가"로 보고 그냥 포함시킨다 (아래 함수 주석 참고).
+                cur.execute("""
+                    ALTER TABLE predictions
+                    ADD COLUMN IF NOT EXISTS kickoff_time TEXT
                 """)
                 cur.execute("""
                     CREATE TABLE IF NOT EXISTS actual_results (
@@ -126,11 +142,20 @@ def register_model_version_if_new(version: str, description: str, params: dict, 
         print(f"[prediction_log.register_model_version_if_new] 경고: {e}")
 
 
-def record_prediction(fixture_id, match_date, home_team, away_team, result: dict):
+def record_prediction(fixture_id, match_date, home_team, away_team, result: dict,
+                       prediction_type: str = "match_analysis", kickoff_time: str = None):
     """
     predictor.analyze_match()의 반환값(result)을 그대로 받아서 스냅샷 1행을
     새로 추가한다. 같은 fixture를 여러 번 분석해도 매번 새 행이 생긴다
     (기존 행을 절대 UPDATE하지 않음).
+
+    prediction_type: 'match_analysis'(사용자가 직접 분석한 것, 기본값) 또는
+    'team_outlook'(AI 팀 전망 배치가 만든 것). 성능평가에서 이 둘을 섞지
+    않기 위한 구분값이다.
+
+    kickoff_time: 그 경기의 실제 킥오프 시각(ISO, 예: "2026-10-01T15:00:00+00:00").
+    아는 경우 반드시 넘겨야 한다 - 나중에 "경기 시작 전 마지막 예측"을 정확히
+    가려내는 기준이 이 값이기 때문이다 (match_date는 날짜만 있어서 부정확함).
 
     DB 저장에 실패해도 예외를 던지지 않는다 - 예측 결과 화면 표시는
     이 함수의 성공 여부와 무관하게 이미 끝난 뒤이기 때문에, 여기서 실패해도
@@ -145,17 +170,19 @@ def record_prediction(fixture_id, match_date, home_team, away_team, result: dict
                     """
                     INSERT INTO predictions (
                         fixture_id, match_date, home_team, away_team, prediction_timestamp, model_version,
+                        prediction_type, kickoff_time,
                         lambda_home, lambda_away,
                         prob_home_win, prob_draw, prob_away_win,
                         prob_btts_yes, prob_btts_no,
                         prob_over_2_5, prob_under_2_5,
                         handicap_line, prob_handicap_home, prob_handicap_push, prob_handicap_away,
                         most_likely_scores_json
-                    ) VALUES (%s,%s,%s,%s,%s,%s, %s,%s, %s,%s,%s, %s,%s, %s,%s, %s,%s,%s,%s, %s)
+                    ) VALUES (%s,%s,%s,%s,%s,%s, %s,%s, %s,%s, %s,%s,%s, %s,%s, %s,%s, %s,%s,%s,%s, %s)
                     """,
                     (
                         fixture_id, match_date, home_team, away_team,
                         datetime.utcnow().isoformat(), CURRENT_MODEL_VERSION,
+                        prediction_type, kickoff_time,
                         result.get("home_lambda"), result.get("away_lambda"),
                         probs.get("home_win"), probs.get("draw"), probs.get("away_win"),
                         probs.get("btts_yes"), probs.get("btts_no"),
@@ -230,4 +257,48 @@ def get_unresolved_fixture_ids():
                 return [dict(row) for row in cur.fetchall()]
     except Exception as e:
         print(f"[prediction_log.get_unresolved_fixture_ids] 경고: {e}")
+        return []
+
+
+def get_latest_snapshot_per_fixture(prediction_type: str = None, unresolved_only: bool = False,
+                                     require_pre_kickoff: bool = True):
+    """
+    fixture_id별로 "그 경기 시작 전에 만들어진 것 중 가장 최근 스냅샷" 딱 1개씩만
+    반환한다. 같은 미래경기를 여러 번 재계산(예: 팀 전망 배치를 매주 돌림)하면
+    스냅샷이 여러 개 쌓이는데, 팀 전망 집계나 성능평가 둘 다 "킥오프 직전
+    마지막 예측"만 봐야 공정하므로 이 함수 하나로 통일해서 쓴다.
+
+    require_pre_kickoff=True(기본값)이면 prediction_timestamp < kickoff_time 인
+    스냅샷만 후보로 본다 - 경기가 시작된 뒤에 만들어진 예측(예: 실수로 경기중에
+    재분석한 경우)은 "사전 예측"이 아니므로 성능평가에서 반드시 제외해야 한다.
+    kickoff_time이 NULL인 예전 행은 이 판정 자체가 불가능하므로 그냥 포함시킨다
+    (이 컬럼이 생기기 전에 저장된 match_analysis 행들이 여기 해당함).
+
+    prediction_type: 'match_analysis' 또는 'team_outlook'으로 반드시 좁혀서 써야
+    한다 - 안 주면 두 종류가 섞인 채로 나오니, 일반 분석 성능통계에는 반드시
+    prediction_type='match_analysis'를 지정해서 호출할 것.
+    unresolved_only: True면 아직 actual_results 없는 것만 (팀 전망 집계용).
+    """
+    try:
+        with closing(_connect()) as conn:
+            with conn.cursor() as cur:
+                query = """
+                    SELECT DISTINCT ON (p.fixture_id) p.*, a.actual_home_goals, a.actual_away_goals
+                    FROM predictions p
+                    LEFT JOIN actual_results a ON p.fixture_id = a.fixture_id
+                    WHERE p.fixture_id IS NOT NULL
+                """
+                params = []
+                if prediction_type:
+                    query += " AND p.prediction_type = %s"
+                    params.append(prediction_type)
+                if unresolved_only:
+                    query += " AND a.fixture_id IS NULL"
+                if require_pre_kickoff:
+                    query += " AND (p.kickoff_time IS NULL OR p.prediction_timestamp < p.kickoff_time)"
+                query += " ORDER BY p.fixture_id, p.prediction_timestamp DESC"
+                cur.execute(query, tuple(params))
+                return [dict(row) for row in cur.fetchall()]
+    except Exception as e:
+        print(f"[prediction_log.get_latest_snapshot_per_fixture] 경고: {e}")
         return []
