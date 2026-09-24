@@ -108,6 +108,7 @@ def main():
                 "over_2_5": result["probabilities"]["over_2_5"],
                 "suggested_line": result["handicap"]["suggested_line"],
                 "home_cover": result["handicap"]["home_cover"],
+                "push": result["handicap"]["push"],
                 "away_cover": result["handicap"]["away_cover"],
             }
         except Exception as e:
@@ -126,7 +127,7 @@ def main():
 
         agg_h = team_agg.setdefault(home, {
             "xp_total": 0.0, "xp_home": [], "xp_away": [],
-            "btts": [], "o25": [], "hcap": [],
+            "btts": [], "o25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
             "lambda_home": [], "lambda_away": [], "remaining": 0,
         })
         home_xp = 3 * m["prob_home_win"] + 1 * m["prob_draw"]
@@ -136,11 +137,13 @@ def main():
         agg_h["btts"].append(m["btts_yes"])
         agg_h["o25"].append(m["over_2_5"])
         agg_h["lambda_home"].append(m["lambda_home"])
-        agg_h["hcap"].append(m["home_cover"])
+        agg_h["hcap_hit"].append(m["home_cover"])
+        agg_h["hcap_push"].append(m["push"])
+        agg_h["hcap_miss"].append(m["away_cover"])
 
         agg_a = team_agg.setdefault(away, {
             "xp_total": 0.0, "xp_home": [], "xp_away": [],
-            "btts": [], "o25": [], "hcap": [],
+            "btts": [], "o25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
             "lambda_home": [], "lambda_away": [], "remaining": 0,
         })
         away_xp = 3 * m["prob_away_win"] + 1 * m["prob_draw"]
@@ -150,7 +153,9 @@ def main():
         agg_a["btts"].append(m["btts_yes"])
         agg_a["o25"].append(m["over_2_5"])
         agg_a["lambda_away"].append(m["lambda_away"])
-        agg_a["hcap"].append(m["away_cover"])
+        agg_a["hcap_hit"].append(m["away_cover"])
+        agg_a["hcap_push"].append(m["push"])
+        agg_a["hcap_miss"].append(m["home_cover"])
 
     outlook = {
         "disclaimer": (
@@ -181,8 +186,16 @@ def main():
             outlook["btts"].append({"team": team, "logo": logo, "value": round(avg(agg["btts"]) * 100, 1), "remaining": remaining})
         if agg["o25"]:
             outlook["o25"].append({"team": team, "logo": logo, "value": round(avg(agg["o25"]) * 100, 1), "remaining": remaining})
-        if agg["hcap"]:
-            outlook["handicap"].append({"team": team, "logo": logo, "value": round(avg(agg["hcap"]) * 100, 1), "remaining": remaining})
+        if agg["hcap_hit"]:
+            hit = avg(agg["hcap_hit"]) * 100
+            push = avg(agg["hcap_push"]) * 100
+            miss = avg(agg["hcap_miss"]) * 100
+            equity = round(hit + push * 0.5, 1)
+            outlook["handicap"].append({
+                "team": team, "logo": logo, "value": equity,
+                "hit": round(hit, 1), "push": round(push, 1), "miss": round(miss, 1),
+                "remaining": remaining,
+            })
 
         h_val = round(avg(agg["lambda_home"]), 2) if agg["lambda_home"] else None
         a_val = round(avg(agg["lambda_away"]), 2) if agg["lambda_away"] else None
@@ -221,19 +234,27 @@ def main():
         for fid, m in fixture_predictions.items():
             sm_result = predictor.match_outcome_probs(m["lambda_home"], m["lambda_away"])
             h_cover, push, a_cover = predictor.handicap_prob(sm_result["score_matrix"], line)
-            for team, cover in [(m["home_name"], h_cover), (m["away_name"], a_cover)]:
-                agg = team_line_agg.setdefault(team, {"covers": [], "remaining": 0})
-                agg["covers"].append(cover)
+            for team, hit, miss in [(m["home_name"], h_cover, a_cover), (m["away_name"], a_cover, h_cover)]:
+                agg = team_line_agg.setdefault(team, {"hits": [], "pushes": [], "misses": [], "remaining": 0})
+                agg["hits"].append(hit)
+                agg["pushes"].append(push)
+                agg["misses"].append(miss)
                 agg["remaining"] += 1
 
-        rows = [
-            {
+        rows = []
+        for t, a in team_line_agg.items():
+            hit_pct = avg(a["hits"]) * 100
+            push_pct = avg(a["pushes"]) * 100
+            miss_pct = avg(a["misses"]) * 100
+            rows.append({
                 "team": t, "logo": team_logo_by_name.get(t),
-                "value": round(avg(a["covers"]) * 100, 1),
+                # 커버 기대값 = 적중 100% + 적특(push) 50% + 미적중 0% 로 계산.
+                # (predictor.handicap_prob 자체는 그대로 두고, 그 결과를 이렇게
+                # 집계만 다르게 한 것 - 백테스트에서 쓰던 것과 동일한 기준)
+                "value": round(hit_pct + push_pct * 0.5, 1),
+                "hit": round(hit_pct, 1), "push": round(push_pct, 1), "miss": round(miss_pct, 1),
                 "remaining": a["remaining"],
-            }
-            for t, a in team_line_agg.items()
-        ]
+            })
         rows.sort(key=lambda r: r["value"], reverse=True)
         handicap_by_line[f"{line:+.1f}"] = rows
 
