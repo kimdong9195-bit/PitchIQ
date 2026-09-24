@@ -203,8 +203,17 @@ def main():
     #    predictor.match_outcome_probs / handicap_prob (기존 함수 그대로)로
     #    "모든 팀의 모든 남은경기에 그 라인을 동일 적용"해서 재계산한다.
     # ------------------------------------------------------------------
-    distinct_lines = sorted({m["suggested_line"] for m in fixture_predictions.values() if m["suggested_line"] is not None})
-    print(f"이번 배치에서 실제로 사용된 핸디라인: {distinct_lines}")
+    distinct_lines_all = sorted({m["suggested_line"] for m in fixture_predictions.values() if m["suggested_line"] is not None})
+    # 현실적인 범위만 탭으로 노출 (-2.5 ~ +2.5). 극단값(예: -6.0)은 시즌 초반
+    # 표본부족으로 인한 일시적 λ 격차일 가능성이 높아, 화면에는 안 보여준다.
+    # 계산 자체를 안 하는 것뿐이지 원본 예측/저장 데이터에는 영향 없음.
+    HANDICAP_LINE_DISPLAY_RANGE = (-2.5, 2.5)
+    distinct_lines = [l for l in distinct_lines_all if HANDICAP_LINE_DISPLAY_RANGE[0] <= l <= HANDICAP_LINE_DISPLAY_RANGE[1]]
+    hidden_count = len(distinct_lines_all) - len(distinct_lines)
+    print(f"이번 배치에서 실제로 사용된 핸디라인 전체: {distinct_lines_all}")
+    print(f"화면에 표시할 라인({HANDICAP_LINE_DISPLAY_RANGE[0]}~{HANDICAP_LINE_DISPLAY_RANGE[1]}): {distinct_lines}")
+    if hidden_count:
+        print(f"범위 밖이라 숨긴 라인 수: {hidden_count}건 (시즌 초반 표본부족으로 인한 극단값으로 추정)")
 
     handicap_by_line = {}
     for line in distinct_lines:
@@ -230,6 +239,7 @@ def main():
 
     outlook["handicap_by_line"] = handicap_by_line
     outlook["handicap_lines"] = [f"{l:+.1f}" for l in distinct_lines]
+    outlook["handicap_lines_hidden_count"] = hidden_count
 
     with open("team_outlook.json", "w", encoding="utf-8") as f:
         json.dump(outlook, f, ensure_ascii=False, indent=2)
