@@ -14,7 +14,7 @@
     --form-bg: #1a1a1a; --muted: #999999; --muted2: #aaaaaa; --row-border: #2a2a2a;
     --accent: #4da3ff; --warn-bg: #3a3320;
   }
-  * { transition: background-color 0.7s ease, color 0.7s ease, border-color 0.7s ease; }
+  * { transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease; }
   body { font-family: -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: var(--text); background: var(--bg); }
   h1 { font-size: 22px; }
   a { color: var(--accent); }
@@ -40,7 +40,8 @@
     padding: 10px 4px; border-bottom: 1px solid var(--row-border); font-size: 14px;
   }
   .outlook-row .rank { color: var(--muted); width: 24px; }
-  .outlook-row .team { font-weight: 600; flex: 1; }
+  .outlook-row .team-logo { width: 20px; height: 20px; object-fit: contain; margin-right: 8px; }
+  .outlook-row .team { font-weight: 600; flex: 1; display: flex; align-items: center; }
   .outlook-row .value { font-weight: 700; color: var(--accent); }
   .outlook-row .remaining { font-size: 11px; color: var(--muted); margin-left: 6px; }
   .theme-toggle {
@@ -85,7 +86,7 @@
     </div>
     <div class="sample-note">
       시즌 초반에는 표본이 적어 변동성이 클 수 있습니다. 경기 데이터가 누적될수록 지표의 안정성이 높아집니다.
-      (현재 팀당 평균 {{ outlook.avg_matches_played }}경기 진행됨)
+      (현재까지 {{ outlook.matches_played_total }}경기 진행 / 잔여 {{ outlook.matches_remaining_total }}경기, 팀당 평균 {{ outlook.avg_matches_played }}경기 진행됨)
     </div>
 
     <div class="tabs">
@@ -101,7 +102,10 @@
       {% for row in outlook['1x2'] %}
         <div class="outlook-row">
           <span class="rank">{{ loop.index }}</span>
-          <span class="team">{{ row.team }}</span>
+          <span class="team">
+            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+            {{ row.team }}
+          </span>
           <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
         </div>
       {% endfor %}
@@ -112,7 +116,10 @@
       {% for row in outlook.btts %}
         <div class="outlook-row">
           <span class="rank">{{ loop.index }}</span>
-          <span class="team">{{ row.team }}</span>
+          <span class="team">
+            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+            {{ row.team }}
+          </span>
           <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
         </div>
       {% endfor %}
@@ -123,7 +130,10 @@
       {% for row in outlook.o25 %}
         <div class="outlook-row">
           <span class="rank">{{ loop.index }}</span>
-          <span class="team">{{ row.team }}</span>
+          <span class="team">
+            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+            {{ row.team }}
+          </span>
           <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
         </div>
       {% endfor %}
@@ -134,7 +144,10 @@
       {% for row in outlook.handicap %}
         <div class="outlook-row">
           <span class="rank">{{ loop.index }}</span>
-          <span class="team">{{ row.team }}</span>
+          <span class="team">
+            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+            {{ row.team }}
+          </span>
           <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
         </div>
       {% endfor %}
@@ -146,7 +159,10 @@
       {% for row in outlook.score_home %}
         <div class="outlook-row">
           <span class="rank">{{ loop.index }}</span>
-          <span class="team">{{ row.team }}</span>
+          <span class="team">
+            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+            {{ row.team }}
+          </span>
           <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 홈 {{ row.remaining }}경기</span></span>
         </div>
       {% endfor %}
@@ -154,7 +170,10 @@
       {% for row in outlook.score_away %}
         <div class="outlook-row">
           <span class="rank">{{ loop.index }}</span>
-          <span class="team">{{ row.team }}</span>
+          <span class="team">
+            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+            {{ row.team }}
+          </span>
           <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 원정 {{ row.remaining }}경기</span></span>
         </div>
       {% endfor %}
