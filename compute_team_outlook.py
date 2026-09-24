@@ -106,6 +106,7 @@ def main():
                 "prob_away_win": result["probabilities"]["away_win"],
                 "btts_yes": result["probabilities"]["btts_yes"],
                 "over_2_5": result["probabilities"]["over_2_5"],
+                "under_2_5": result["probabilities"]["under_2_5"],
                 "suggested_line": result["handicap"]["suggested_line"],
                 "home_cover": result["handicap"]["home_cover"],
                 "push": result["handicap"]["push"],
@@ -127,7 +128,7 @@ def main():
 
         agg_h = team_agg.setdefault(home, {
             "xp_total": 0.0, "xp_home": [], "xp_away": [],
-            "btts": [], "o25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
+            "btts": [], "o25": [], "u25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
             "lambda_home": [], "lambda_away": [], "remaining": 0,
         })
         home_xp = 3 * m["prob_home_win"] + 1 * m["prob_draw"]
@@ -136,6 +137,7 @@ def main():
         agg_h["xp_home"].append(home_xp)
         agg_h["btts"].append(m["btts_yes"])
         agg_h["o25"].append(m["over_2_5"])
+        agg_h["u25"].append(m["under_2_5"])
         agg_h["lambda_home"].append(m["lambda_home"])
         agg_h["hcap_hit"].append(m["home_cover"])
         agg_h["hcap_push"].append(m["push"])
@@ -143,7 +145,7 @@ def main():
 
         agg_a = team_agg.setdefault(away, {
             "xp_total": 0.0, "xp_home": [], "xp_away": [],
-            "btts": [], "o25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
+            "btts": [], "o25": [], "u25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
             "lambda_home": [], "lambda_away": [], "remaining": 0,
         })
         away_xp = 3 * m["prob_away_win"] + 1 * m["prob_draw"]
@@ -152,6 +154,7 @@ def main():
         agg_a["xp_away"].append(away_xp)
         agg_a["btts"].append(m["btts_yes"])
         agg_a["o25"].append(m["over_2_5"])
+        agg_a["u25"].append(m["under_2_5"])
         agg_a["lambda_away"].append(m["lambda_away"])
         agg_a["hcap_hit"].append(m["away_cover"])
         agg_a["hcap_push"].append(m["push"])
@@ -185,7 +188,12 @@ def main():
         if agg["btts"]:
             outlook["btts"].append({"team": team, "logo": logo, "value": round(avg(agg["btts"]) * 100, 1), "remaining": remaining})
         if agg["o25"]:
-            outlook["o25"].append({"team": team, "logo": logo, "value": round(avg(agg["o25"]) * 100, 1), "remaining": remaining})
+            outlook["o25"].append({
+                "team": team, "logo": logo,
+                "value": round(avg(agg["o25"]) * 100, 1),
+                "under_value": round(avg(agg["u25"]) * 100, 1) if agg["u25"] else None,
+                "remaining": remaining,
+            })
         if agg["hcap_hit"]:
             hit = avg(agg["hcap_hit"]) * 100
             push = avg(agg["hcap_push"]) * 100
