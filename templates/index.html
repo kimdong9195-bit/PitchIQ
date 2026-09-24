@@ -34,12 +34,14 @@
   * { transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease; }
   .theme-toggle, .nav-link-btn {
     background: none; border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); font-size: 12px; padding: 0 10px; cursor: pointer;
+    color: var(--text); font-size: 12px; padding: 0 10px; margin: 0; cursor: pointer;
     white-space: nowrap; text-decoration: none;
     display: inline-flex; align-items: center; justify-content: center;
-    height: 28px; line-height: 1; font-family: inherit; box-sizing: border-box;
+    height: 28px; max-height: 28px; overflow: hidden;
+    line-height: 26px; font-family: inherit; box-sizing: border-box;
     vertical-align: middle;
   }
+  .theme-toggle *, .nav-link-btn * { line-height: 26px; }
   h1 { font-size: 22px; }
   form { background: var(--form-bg); padding: 20px; border-radius: 12px; margin-bottom: 24px; }
   label { display: block; font-size: 13px; color: var(--muted2); margin-top: 12px; }
@@ -114,18 +116,19 @@
 </head>
 <body>
 
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-    <h1 style="margin:0;">⚽ PitchIQ</h1>
-    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-      {% if user %}
-        <div style="font-size:13px; color:var(--muted2); white-space:nowrap;">
-          {{ user.email }}{% if user.is_admin %} (관리자){% endif %}
-          · 오늘 사용량: {{ today_usage }}{% if user.daily_limit is not none %}/{{ user.daily_limit }}{% else %}/무제한{% endif %}
-          · <a href="/logout">로그아웃</a>
-        </div>
-      {% else %}
-        <div style="font-size:13px; white-space:nowrap;"><a href="/login">로그인</a> / <a href="/signup">회원가입</a></div>
-      {% endif %}
+  <h1 style="margin:0 0 12px;">⚽ PitchIQ</h1>
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+              padding-bottom:14px; margin-bottom:20px; border-bottom:1px solid var(--border);">
+    {% if user %}
+      <div style="font-size:13px; color:var(--muted2); white-space:nowrap;">
+        {{ user.email }}{% if user.is_admin %} (관리자){% endif %}
+        · 오늘 사용량: {{ today_usage }}{% if user.daily_limit is not none %}/{{ user.daily_limit }}{% else %}/무제한{% endif %}
+        · <a href="/logout">로그아웃</a>
+      </div>
+    {% else %}
+      <div style="font-size:13px; white-space:nowrap;"><a href="/login">로그인</a> / <a href="/signup">회원가입</a></div>
+    {% endif %}
+    <div style="display:flex; align-items:center; gap:8px;">
       {% if user %}
         <a href="/ai-outlook" class="nav-link-btn">📊 AI 팀 전망</a>
       {% endif %}

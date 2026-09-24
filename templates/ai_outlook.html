@@ -46,12 +46,14 @@
   .outlook-row .remaining { font-size: 11px; color: var(--muted); margin-left: 6px; }
   .theme-toggle, .nav-link-btn {
     background: none; border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); font-size: 12px; padding: 0 10px; cursor: pointer;
+    color: var(--text); font-size: 12px; padding: 0 10px; margin: 0; cursor: pointer;
     white-space: nowrap; text-decoration: none;
     display: inline-flex; align-items: center; justify-content: center;
-    height: 28px; line-height: 1; font-family: inherit; box-sizing: border-box;
+    height: 28px; max-height: 28px; overflow: hidden;
+    line-height: 26px; font-family: inherit; box-sizing: border-box;
     vertical-align: middle;
   }
+  .theme-toggle *, .nav-link-btn * { line-height: 26px; }
   .outlook-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .outlook-table th, .outlook-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--row-border); }
   .outlook-table th { color: var(--muted); font-weight: 600; font-size: 11px; }
@@ -94,12 +96,11 @@
 </script>
 </head>
 <body>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-    <h1 style="margin:0;">📊 AI 팀 전망</h1>
-    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-      <a href="/" class="nav-link-btn">← 경기 분석으로</a>
-      <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 화면모드</button>
-    </div>
+  <h1 style="margin:0 0 12px;">📊 AI 팀 전망</h1>
+  <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;
+              padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid var(--border);">
+    <a href="/" class="nav-link-btn">← 경기 분석으로</a>
+    <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 화면모드</button>
   </div>
 
   {% if not outlook %}
