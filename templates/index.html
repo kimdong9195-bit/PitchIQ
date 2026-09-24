@@ -32,9 +32,10 @@
   }
   body { font-family: -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: var(--text); background: var(--bg); }
   * { transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease; }
-  .theme-toggle {
+  .theme-toggle, .nav-link-btn {
     background: none; border: 1px solid var(--border); border-radius: 8px;
     color: var(--text); font-size: 12px; padding: 4px 10px; cursor: pointer;
+    white-space: nowrap; text-decoration: none; display: inline-block;
   }
   h1 { font-size: 22px; }
   form { background: var(--form-bg); padding: 20px; border-radius: 12px; margin-bottom: 24px; }
@@ -110,20 +111,20 @@
 </head>
 <body>
 
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1>⚽ PitchIQ</h1>
-    <div style="display:flex; align-items:center; gap:10px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+    <h1 style="margin:0;">⚽ PitchIQ</h1>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
       {% if user %}
-        <div style="font-size:13px; color:var(--muted2);">
+        <div style="font-size:13px; color:var(--muted2); white-space:nowrap;">
           {{ user.email }}{% if user.is_admin %} (관리자){% endif %}
           · 오늘 사용량: {{ today_usage }}{% if user.daily_limit is not none %}/{{ user.daily_limit }}{% else %}/무제한{% endif %}
           · <a href="/logout">로그아웃</a>
         </div>
       {% else %}
-        <div style="font-size:13px;"><a href="/login">로그인</a> / <a href="/signup">회원가입</a></div>
+        <div style="font-size:13px; white-space:nowrap;"><a href="/login">로그인</a> / <a href="/signup">회원가입</a></div>
       {% endif %}
       {% if user %}
-        <a href="/ai-outlook" style="font-size:13px;">📊 AI 팀 전망</a>
+        <a href="/ai-outlook" class="nav-link-btn">📊 AI 팀 전망</a>
       {% endif %}
       <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 화면모드</button>
     </div>

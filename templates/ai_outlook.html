@@ -44,9 +44,10 @@
   .outlook-row .team { font-weight: 600; flex: 1; display: flex; align-items: center; }
   .outlook-row .value { font-weight: 700; color: var(--accent); }
   .outlook-row .remaining { font-size: 11px; color: var(--muted); margin-left: 6px; }
-  .theme-toggle {
+  .theme-toggle, .nav-link-btn {
     background: none; border: 1px solid var(--border); border-radius: 8px;
     color: var(--text); font-size: 12px; padding: 4px 10px; cursor: pointer;
+    white-space: nowrap; text-decoration: none; display: inline-block;
   }
   .outlook-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .outlook-table th, .outlook-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--row-border); }
@@ -90,10 +91,10 @@
 </script>
 </head>
 <body>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-    <h1>📊 AI 팀 전망</h1>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <a href="/" style="font-size:13px;">← 경기 분석으로</a>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+    <h1 style="margin:0;">📊 AI 팀 전망</h1>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <a href="/" class="nav-link-btn">← 경기 분석으로</a>
       <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 화면모드</button>
     </div>
   </div>
@@ -143,30 +144,42 @@
 
     <div class="tab-panel" id="panel-btts">
       <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 BTTS(양팀득점) Yes 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
-      {% for row in outlook.btts %}
-        <div class="outlook-row">
-          <span class="rank">{{ loop.index }}</span>
-          <span class="team">
-            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
-            {{ row.team }}
-          </span>
-          <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
-        </div>
-      {% endfor %}
+      <table class="outlook-table">
+        <thead><tr><th></th><th>팀</th><th>BTTS Yes</th><th>잔여</th></tr></thead>
+        <tbody>
+          {% for row in outlook.btts %}
+            <tr>
+              <td class="rank">{{ loop.index }}</td>
+              <td class="team-cell">
+                {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                {{ row.team }}
+              </td>
+              <td class="value">{{ row.value }}%</td>
+              <td class="remaining">{{ row.remaining }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
     <div class="tab-panel" id="panel-o25">
       <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 오버 2.5골 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
-      {% for row in outlook.o25 %}
-        <div class="outlook-row">
-          <span class="rank">{{ loop.index }}</span>
-          <span class="team">
-            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
-            {{ row.team }}
-          </span>
-          <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
-        </div>
-      {% endfor %}
+      <table class="outlook-table">
+        <thead><tr><th></th><th>팀</th><th>Over 2.5</th><th>잔여</th></tr></thead>
+        <tbody>
+          {% for row in outlook.o25 %}
+            <tr>
+              <td class="rank">{{ loop.index }}</td>
+              <td class="team-cell">
+                {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                {{ row.team }}
+              </td>
+              <td class="value">{{ row.value }}%</td>
+              <td class="remaining">{{ row.remaining }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
     <div class="tab-panel" id="panel-handicap">
