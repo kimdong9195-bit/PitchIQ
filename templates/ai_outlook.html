@@ -85,11 +85,11 @@
     document.getElementById('panel-' + name).classList.add('active');
     document.getElementById('btn-' + name).classList.add('active');
   }
-  function showLine(idx) {
-    document.querySelectorAll('.line-panel').forEach(function (el) { el.classList.remove('active'); });
-    document.querySelectorAll('.line-tab-btn').forEach(function (el) { el.classList.remove('active'); });
-    document.getElementById('linepanel-' + idx).classList.add('active');
-    document.getElementById('linebtn-' + idx).classList.add('active');
+  function showLine(group, idx) {
+    document.querySelectorAll('.line-panel[data-group="' + group + '"]').forEach(function (el) { el.classList.remove('active'); });
+    document.querySelectorAll('.line-tab-btn[data-group="' + group + '"]').forEach(function (el) { el.classList.remove('active'); });
+    document.getElementById(group + 'panel-' + idx).classList.add('active');
+    document.getElementById(group + 'btn-' + idx).classList.add('active');
   }
 </script>
 </head>
@@ -146,23 +146,47 @@
     </div>
 
     <div class="tab-panel" id="panel-btts">
-      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 BTTS(양팀득점) Yes 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
-      <table class="outlook-table">
-        <thead><tr><th></th><th>팀</th><th>BTTS Yes</th><th>잔여</th></tr></thead>
-        <tbody>
-          {% for row in outlook.btts %}
-            <tr>
-              <td class="rank">{{ loop.index }}</td>
-              <td class="team-cell">
-                {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
-                {{ row.team }}
-              </td>
-              <td class="value">{{ row.value }}%</td>
-              <td class="remaining">{{ row.remaining }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 BTTS(양팀득점) 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
+      <div class="line-tabs">
+        <button class="line-tab-btn active" data-group="btts" id="bttsbtn-1" onclick="showLine('btts', '1')">Yes</button>
+        <button class="line-tab-btn" data-group="btts" id="bttsbtn-2" onclick="showLine('btts', '2')">No</button>
+      </div>
+      <div class="line-panel active" data-group="btts" id="bttspanel-1">
+        <table class="outlook-table">
+          <thead><tr><th></th><th>팀</th><th>BTTS Yes</th><th>잔여</th></tr></thead>
+          <tbody>
+            {% for row in outlook.btts %}
+              <tr>
+                <td class="rank">{{ loop.index }}</td>
+                <td class="team-cell">
+                  {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                  {{ row.team }}
+                </td>
+                <td class="value">{{ row.value }}%</td>
+                <td class="remaining">{{ row.remaining }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="line-panel" data-group="btts" id="bttspanel-2">
+        <table class="outlook-table">
+          <thead><tr><th></th><th>팀</th><th>BTTS No</th><th>잔여</th></tr></thead>
+          <tbody>
+            {% for row in outlook.btts | sort(attribute='no_value', reverse=true) %}
+              <tr>
+                <td class="rank">{{ loop.index }}</td>
+                <td class="team-cell">
+                  {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                  {{ row.team }}
+                </td>
+                <td class="value">{{ row.no_value if row.no_value is not none else '-' }}%</td>
+                <td class="remaining">{{ row.remaining }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="tab-panel" id="panel-o25">
@@ -196,12 +220,12 @@
       </div>
       <div class="line-tabs">
         {% for line in outlook.handicap_lines %}
-          <button class="line-tab-btn {% if loop.first %}active{% endif %}" id="linebtn-{{ loop.index }}"
-                  onclick="showLine('{{ loop.index }}')">{{ line }}</button>
+          <button class="line-tab-btn {% if loop.first %}active{% endif %}" data-group="hcap" id="hcapbtn-{{ loop.index }}"
+                  onclick="showLine('hcap', '{{ loop.index }}')">{{ line }}</button>
         {% endfor %}
       </div>
       {% for line in outlook.handicap_lines %}
-        <div class="line-panel {% if loop.first %}active{% endif %}" id="linepanel-{{ loop.index }}">
+        <div class="line-panel {% if loop.first %}active{% endif %}" data-group="hcap" id="hcappanel-{{ loop.index }}">
           <table class="outlook-table">
             <thead><tr><th></th><th>팀</th><th>커버 기대값</th><th>세부내역</th><th>잔여</th></tr></thead>
             <tbody>
@@ -225,23 +249,46 @@
 
     <div class="tab-panel" id="panel-score">
       <div class="tab-context">EPL 잔여경기 기준 · venue별(홈경기만/원정경기만) 평균 예상득점(λ)</div>
-      <table class="outlook-table">
-        <thead><tr><th></th><th>팀</th><th>홈</th><th>원정</th><th>잔여</th></tr></thead>
-        <tbody>
-          {% for row in outlook.score %}
-            <tr>
-              <td class="rank">{{ loop.index }}</td>
-              <td class="team-cell">
-                {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
-                {{ row.team }}
-              </td>
-              <td>{{ row.home_value if row.home_value is not none else '-' }}</td>
-              <td>{{ row.away_value if row.away_value is not none else '-' }}</td>
-              <td class="remaining">{{ row.remaining }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="line-tabs">
+        <button class="line-tab-btn active" data-group="score" id="scorebtn-1" onclick="showLine('score', '1')">홈</button>
+        <button class="line-tab-btn" data-group="score" id="scorebtn-2" onclick="showLine('score', '2')">원정</button>
+      </div>
+      <div class="line-panel active" data-group="score" id="scorepanel-1">
+        <table class="outlook-table">
+          <thead><tr><th></th><th>팀</th><th>홈 득점 전망</th><th>잔여</th></tr></thead>
+          <tbody>
+            {% for row in outlook.score | sort(attribute='home_value', reverse=true) %}
+              <tr>
+                <td class="rank">{{ loop.index }}</td>
+                <td class="team-cell">
+                  {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                  {{ row.team }}
+                </td>
+                <td class="value">{{ row.home_value if row.home_value is not none else '-' }}</td>
+                <td class="remaining">{{ row.remaining }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="line-panel" data-group="score" id="scorepanel-2">
+        <table class="outlook-table">
+          <thead><tr><th></th><th>팀</th><th>원정 득점 전망</th><th>잔여</th></tr></thead>
+          <tbody>
+            {% for row in outlook.score | sort(attribute='away_value', reverse=true) %}
+              <tr>
+                <td class="rank">{{ loop.index }}</td>
+                <td class="team-cell">
+                  {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                  {{ row.team }}
+                </td>
+                <td class="value">{{ row.away_value if row.away_value is not none else '-' }}</td>
+                <td class="remaining">{{ row.remaining }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   {% endif %}
 </body>
