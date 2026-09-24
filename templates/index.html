@@ -42,7 +42,7 @@
   .pitch {
     position: relative;
     width: 100%;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 3 / 5;
     background: repeating-linear-gradient(to bottom, #3f9142, #3f9142 10%, #479a4a 10%, #479a4a 20%);
     border: 2px solid #fff;
     border-radius: 8px;
@@ -52,27 +52,27 @@
   .pitch::before {
     content: "";
     position: absolute; left: 50%; top: 50%;
-    width: 60px; height: 60px; margin: -30px 0 0 -30px;
+    width: 70px; height: 70px; margin: -35px 0 0 -35px;
     border: 2px solid rgba(255,255,255,0.6); border-radius: 50%;
   }
   .pitch::after {
     content: "";
-    position: absolute; left: 50%; top: 0;
-    width: 0; border-left: 2px solid rgba(255,255,255,0.6); height: 100%;
+    position: absolute; left: 0; top: 50%;
+    width: 100%; border-top: 2px solid rgba(255,255,255,0.6); height: 0;
   }
   .player-chip {
     position: absolute;
     transform: translate(-50%, -50%);
     display: flex; flex-direction: column; align-items: center;
-    width: 56px;
-    font-size: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    width: 78px;
+    font-size: 13px; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
     text-align: center;
   }
   .player-chip .num {
-    width: 24px; height: 24px; border-radius: 50%;
-    background: rgba(20,20,20,0.75); border: 1px solid rgba(255,255,255,0.8);
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(20,20,20,0.75); border: 2px solid rgba(255,255,255,0.9);
     display: flex; align-items: center; justify-content: center;
-    font-weight: bold; font-size: 12px; margin-bottom: 2px;
+    font-weight: bold; font-size: 17px; margin-bottom: 3px;
     overflow: hidden;
   }
   .player-chip .num img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
@@ -362,8 +362,13 @@
     <div class="section-title">확정 라인업</div>
     {% if result.lineups %}
       {% for team_name, lineup in result.lineups.items() %}
-        <p class="pitch-team-label">{{ team_name }} ({{ lineup.formation }})</p>
-        <div class="pitch">
+        {% if lineup.side == 'home' %}
+          <p class="pitch-team-label">🏠 {{ team_name }} ({{ lineup.formation }})</p>
+        {% endif %}
+      {% endfor %}
+
+      <div class="pitch">
+        {% for team_name, lineup in result.lineups.items() %}
           {% for p in lineup.starters %}
             {% if p.top_pct is defined %}
               <div class="player-chip" style="top: {{ p.top_pct }}%; left: {{ p.left_pct }}%;">
@@ -380,15 +385,24 @@
               </div>
             {% endif %}
           {% endfor %}
-        </div>
+        {% endfor %}
+      </div>
+
+      {% for team_name, lineup in result.lineups.items() %}
+        {% if lineup.side == 'away' %}
+          <p class="pitch-team-label">✈️ {{ team_name }} ({{ lineup.formation }})</p>
+        {% endif %}
+      {% endfor %}
+
+      {% for team_name, lineup in result.lineups.items() %}
         {% set no_grid_players = lineup.starters | selectattr('top_pct', 'undefined') | list %}
         {% if no_grid_players %}
           <p style="font-size:12px; color:var(--muted); margin-top:-8px;">
-            (좌표 정보 없음: {{ no_grid_players | map(attribute='name') | join(', ') }})
+            ({{ team_name }} 좌표 정보 없음: {{ no_grid_players | map(attribute='name') | join(', ') }})
           </p>
         {% endif %}
         {% if lineup.substitutes %}
-          <p style="font-size:12px; color:var(--muted2); margin-top:4px;">교체: {{ lineup.substitutes | join(', ') }}</p>
+          <p style="font-size:12px; color:var(--muted2); margin-top:4px;">{{ team_name }} 교체: {{ lineup.substitutes | join(', ') }}</p>
         {% endif %}
       {% endfor %}
     {% else %}
