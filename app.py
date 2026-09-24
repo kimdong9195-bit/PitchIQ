@@ -281,6 +281,12 @@ def analyze():
             title_race=title_race, local_derby=local_derby, relegation_battle=relegation_battle,
         )
         result["lineups"] = lineups
+        # 팀 로고 - search_team()이 이미 받아온 정보를 그대로 재사용 (API 추가호출 없음).
+        # predictor.py는 팀 이름만 다루므로, 로고/ID는 여기(app.py)에서 result에 얹는다.
+        result["home_team_id"] = team_a_info["id"]
+        result["away_team_id"] = team_b_info["id"]
+        result["home_team_logo"] = team_a_info.get("logo")
+        result["away_team_logo"] = team_b_info.get("logo")
 
         # 예측 기록 - target_fixture가 있으면(대부분의 경우) 그 fixture_id로 저장.
         # 실패해도(DB 연결 문제 등) 분석 결과 표시 자체는 막지 않는다.

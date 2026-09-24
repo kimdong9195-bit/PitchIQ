@@ -336,3 +336,34 @@ def get_fixture_statistics(fixture_id: int) -> list:
     """
     data = _get("fixtures/statistics", {"fixture": fixture_id})
     return data.get("response", [])
+
+
+def get_remaining_fixtures(team_id: int, season: int, league_id: int = 39) -> list:
+    """
+    그 팀의 이번 시즌 'EPL 정규리그' 경기 중 아직 안 열린 것만 (친선/컵대회/
+    챔스·유로파 등 다른 대회는 전부 제외, 날짜순).
+
+    league_id를 API 파라미터로 직접 넘겨서 서버 쪽에서부터 EPL만 걸러받는다
+    (친선경기처럼 응답을 받은 뒤 골라내는 방식이 아니라, 애초에 다른 대회
+    데이터 자체를 안 받아옴 - 더 정확하고 API 응답도 가벼워짐).
+
+    AI 팀 전망(compute_team_outlook.py)이 "앞으로 남은 EPL 일정"만 모을 때 쓴다 -
+    컵대회/유럽대항전까지 섞이면 그 대회에 많이 남아있는 팀이 부당하게
+    유리해지므로(잔여경기 수 자체가 달라짐) 반드시 EPL만으로 좁혀야 한다.
+    """
+    data = _get("fixtures", {"team": team_id, "season": season, "league": league_id})
+    fixtures = data.get("response", [])
+    upcoming = [f for f in fixtures if f["fixture"]["status"]["short"] == "NS"]
+    upcoming.sort(key=lambda f: f["fixture"]["date"])
+    return upcoming
+
+
+def get_league_teams(league_id: int, season: int) -> list:
+    """
+    그 리그의 그 시즌 참가팀 전체 (id, name, logo). AI 팀 전망을 만들 20개팀
+    목록을 하드코딩 안 하고 API로 정확히 가져오기 위함 (승격/강등 자동 반영).
+    logo도 이 응답에 이미 포함돼서 따로 호출 안 해도 된다.
+    """
+    data = _get("teams", {"league": league_id, "season": season})
+    response = data.get("response", [])
+    return [{"id": t["team"]["id"], "name": t["team"]["name"], "logo": t["team"].get("logo")} for t in response]

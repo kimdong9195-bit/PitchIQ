@@ -197,6 +197,7 @@ def parse_lineups(lineup_data: list) -> dict:
         formation = entry.get("formation") or "포메이션 미공개"
         starters = [
             {
+                "id": p["player"].get("id"),
                 "name": p["player"]["name"],
                 "number": p["player"].get("number"),
                 "pos": p["player"].get("pos"),

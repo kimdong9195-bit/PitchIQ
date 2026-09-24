@@ -52,6 +52,7 @@ def main():
     teams = api_client.get_league_teams(LEAGUE_ID_EPL, CURRENT_SEASON)
     print(f"참가팀 수: {len(teams)}")
     team_name_by_id = {t["id"]: t["name"] for t in teams}
+    team_logo_by_name = {t["name"]: t.get("logo") for t in teams}
 
     unique_fixtures = {}
     for t in teams:
@@ -128,22 +129,28 @@ def main():
         # 20팀 x 38경기 기준으로 "팀당 평균 몇 경기 치렀는지" 역산 - 시즌이
         # 얼마나 진행됐는지 화면에 보여주기 위한 값 (표본 크기 체감용).
         "avg_matches_played": round(38 - (len(unique_fixtures) * 2 / max(len(teams), 1)), 1),
+        # 리그 전체 기준 "지금까지 몇 경기 치렀는지 / 앞으로 몇 경기 남았는지"
+        # (팀별 평균이 아니라 리그 전체 숫자 - 화면에 "현재까지 50경기 진행 /
+        # 잔여 330경기" 형태로 그대로 표시하기 위함)
+        "matches_remaining_total": len(unique_fixtures),
+        "matches_played_total": 380 - len(unique_fixtures),
         "1x2": [], "btts": [], "o25": [], "handicap": [], "score_home": [], "score_away": [],
     }
 
     for team, agg in team_agg.items():
         remaining = agg["remaining"]
-        outlook["1x2"].append({"team": team, "value": round(agg["xp"] / remaining, 2), "remaining": remaining})
+        logo = team_logo_by_name.get(team)
+        outlook["1x2"].append({"team": team, "logo": logo, "value": round(agg["xp"] / remaining, 2), "remaining": remaining})
         if agg["btts"]:
-            outlook["btts"].append({"team": team, "value": round(avg(agg["btts"]) * 100, 1), "remaining": remaining})
+            outlook["btts"].append({"team": team, "logo": logo, "value": round(avg(agg["btts"]) * 100, 1), "remaining": remaining})
         if agg["o25"]:
-            outlook["o25"].append({"team": team, "value": round(avg(agg["o25"]) * 100, 1), "remaining": remaining})
+            outlook["o25"].append({"team": team, "logo": logo, "value": round(avg(agg["o25"]) * 100, 1), "remaining": remaining})
         if agg["hcap"]:
-            outlook["handicap"].append({"team": team, "value": round(avg(agg["hcap"]) * 100, 1), "remaining": remaining})
+            outlook["handicap"].append({"team": team, "logo": logo, "value": round(avg(agg["hcap"]) * 100, 1), "remaining": remaining})
         if agg["lambda_home"]:
-            outlook["score_home"].append({"team": team, "value": round(avg(agg["lambda_home"]), 2), "remaining": len(agg["lambda_home"])})
+            outlook["score_home"].append({"team": team, "logo": logo, "value": round(avg(agg["lambda_home"]), 2), "remaining": len(agg["lambda_home"])})
         if agg["lambda_away"]:
-            outlook["score_away"].append({"team": team, "value": round(avg(agg["lambda_away"]), 2), "remaining": len(agg["lambda_away"])})
+            outlook["score_away"].append({"team": team, "logo": logo, "value": round(avg(agg["lambda_away"]), 2), "remaining": len(agg["lambda_away"])})
 
     for key in ["1x2", "btts", "o25", "handicap", "score_home", "score_away"]:
         outlook[key].sort(key=lambda r: r["value"], reverse=True)
