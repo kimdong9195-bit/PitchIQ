@@ -165,7 +165,7 @@
     <div class="tab-panel" id="panel-o25">
       <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 오버 2.5골 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
       <table class="outlook-table">
-        <thead><tr><th></th><th>팀</th><th>Over 2.5</th><th>잔여</th></tr></thead>
+        <thead><tr><th></th><th>팀</th><th>Over 2.5</th><th>Under 2.5</th><th>잔여</th></tr></thead>
         <tbody>
           {% for row in outlook.o25 %}
             <tr>
@@ -175,6 +175,7 @@
                 {{ row.team }}
               </td>
               <td class="value">{{ row.value }}%</td>
+              <td>{{ row.under_value if row.under_value is not none else '-' }}%</td>
               <td class="remaining">{{ row.remaining }}</td>
             </tr>
           {% endfor %}
