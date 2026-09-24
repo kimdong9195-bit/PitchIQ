@@ -5,30 +5,30 @@
 <title>PitchIQ</title>
 <style>
   :root {
-    --bg: #ffffff;
-    --text: #1a1a1a;
+    --bg: #f4f6fa;
+    --text: #11182a;
     --box-bg: #ffffff;
-    --border: #eeeeee;
-    --form-bg: #f5f5f7;
-    --muted: #888888;
-    --muted2: #666666;
-    --row-border: #f0f0f0;
-    --accent: #0070f3;
+    --border: #e2e6ee;
+    --form-bg: #eef1f7;
+    --muted: #8891a5;
+    --muted2: #5b6478;
+    --row-border: #edf0f6;
+    --accent: #e63946;
     --error-bg: #fdecea;
-    --warn-bg: #fff8e1;
+    --warn-bg: #fff3e0;
   }
   [data-theme="dark"] {
-    --bg: #121212;
-    --text: #eaeaea;
-    --box-bg: #1e1e1e;
-    --border: #333333;
-    --form-bg: #1a1a1a;
-    --muted: #999999;
-    --muted2: #aaaaaa;
-    --row-border: #2a2a2a;
-    --accent: #4da3ff;
+    --bg: #0b101c;
+    --text: #e7ebf5;
+    --box-bg: #131b2c;
+    --border: #23304a;
+    --form-bg: #101728;
+    --muted: #8b93ab;
+    --muted2: #aab2c8;
+    --row-border: #1d2740;
+    --accent: #ff4d5e;
     --error-bg: #3a1f1f;
-    --warn-bg: #3a3320;
+    --warn-bg: #3a2a1a;
   }
   body {
     font-family: -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px;
@@ -49,7 +49,7 @@
   }
   .theme-toggle *, .nav-link-btn * { line-height: 26px; }
   h1 { font-size: 22px; }
-  form { background: var(--form-bg); padding: 20px; border-radius: 12px; margin-bottom: 24px; }
+  form { background: var(--form-bg); padding: 20px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
   label { display: block; font-size: 13px; color: var(--muted2); margin-top: 12px; }
   .pitch {
     position: relative;
@@ -92,9 +92,9 @@
   .team-logo { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; margin: 0 6px; }
   .pitch-team-label { font-size: 13px; font-weight: bold; margin: 12px 0 0; }
   input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
-  button { margin-top: 16px; padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; }
+  button { margin-top: 16px; padding: 10px 22px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 3px 10px rgba(230,57,70,0.35); }
   .error { color: #c0392b; background: var(--error-bg); padding: 12px; border-radius: 8px; }
-  .result-box { background: var(--box-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .result-box { background: var(--box-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
   .pick { font-weight: bold; color: var(--accent); }
   .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--row-border); }
   .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 8px; }
