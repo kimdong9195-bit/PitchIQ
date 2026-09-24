@@ -1,103 +1,126 @@
 {
   "disclaimer": "이 순위는 실제 EPL 순위가 아니라, 남은 EPL 일정에 대한 AI 분석 전망입니다. BTTS/오버언더/핸디캡은 팀 자체의 절대적인 능력치가 아니라, 잔여 일정의 상대팀 전력과 홈/원정 조건에 따라 달라지는 상대적 지표입니다.",
+  "avg_matches_played": 5.0,
+  "matches_remaining_total": 330,
+  "matches_played_total": 50,
   "1x2": [
     {
       "team": "Manchester City",
+      "logo": "https://media.api-sports.io/football/teams/50.png",
       "value": 2.23,
       "remaining": 33
     },
     {
       "team": "Liverpool",
+      "logo": "https://media.api-sports.io/football/teams/40.png",
       "value": 1.96,
       "remaining": 33
     },
     {
       "team": "Brighton",
+      "logo": "https://media.api-sports.io/football/teams/51.png",
       "value": 1.91,
       "remaining": 33
     },
     {
       "team": "Crystal Palace",
+      "logo": "https://media.api-sports.io/football/teams/52.png",
       "value": 1.87,
       "remaining": 33
     },
     {
       "team": "Brentford",
+      "logo": "https://media.api-sports.io/football/teams/55.png",
       "value": 1.68,
       "remaining": 33
     },
     {
       "team": "Bournemouth",
+      "logo": "https://media.api-sports.io/football/teams/35.png",
       "value": 1.62,
       "remaining": 33
     },
     {
       "team": "Everton",
+      "logo": "https://media.api-sports.io/football/teams/45.png",
       "value": 1.57,
       "remaining": 33
     },
     {
       "team": "Aston Villa",
+      "logo": "https://media.api-sports.io/football/teams/66.png",
       "value": 1.55,
       "remaining": 33
     },
     {
       "team": "Arsenal",
+      "logo": "https://media.api-sports.io/football/teams/42.png",
       "value": 1.51,
       "remaining": 33
     },
     {
       "team": "Manchester United",
+      "logo": "https://media.api-sports.io/football/teams/33.png",
       "value": 1.39,
       "remaining": 33
     },
     {
       "team": "Newcastle",
+      "logo": "https://media.api-sports.io/football/teams/34.png",
       "value": 1.32,
       "remaining": 33
     },
     {
       "team": "Leeds",
+      "logo": "https://media.api-sports.io/football/teams/63.png",
       "value": 1.3,
       "remaining": 33
     },
     {
       "team": "Chelsea",
+      "logo": "https://media.api-sports.io/football/teams/49.png",
       "value": 1.25,
       "remaining": 33
     },
     {
       "team": "Fulham",
+      "logo": "https://media.api-sports.io/football/teams/36.png",
       "value": 1.24,
       "remaining": 33
     },
     {
       "team": "Nottingham Forest",
+      "logo": "https://media.api-sports.io/football/teams/65.png",
       "value": 1.05,
       "remaining": 33
     },
     {
       "team": "Sunderland",
+      "logo": "https://media.api-sports.io/football/teams/746.png",
       "value": 1.01,
       "remaining": 33
     },
     {
       "team": "Hull City",
+      "logo": "https://media.api-sports.io/football/teams/64.png",
       "value": 0.98,
       "remaining": 33
     },
     {
       "team": "Tottenham",
+      "logo": "https://media.api-sports.io/football/teams/47.png",
       "value": 0.84,
       "remaining": 33
     },
     {
       "team": "Ipswich",
+      "logo": "https://media.api-sports.io/football/teams/57.png",
       "value": 0.8,
       "remaining": 33
     },
     {
       "team": "Coventry",
+      "logo": "https://media.api-sports.io/football/teams/1346.png",
       "value": 0.56,
       "remaining": 33
     }
@@ -105,101 +128,121 @@
   "btts": [
     {
       "team": "Chelsea",
+      "logo": "https://media.api-sports.io/football/teams/49.png",
       "value": 57.9,
       "remaining": 33
     },
     {
       "team": "Aston Villa",
+      "logo": "https://media.api-sports.io/football/teams/66.png",
       "value": 54.9,
       "remaining": 33
     },
     {
       "team": "Leeds",
+      "logo": "https://media.api-sports.io/football/teams/63.png",
       "value": 54.8,
       "remaining": 33
     },
     {
       "team": "Ipswich",
+      "logo": "https://media.api-sports.io/football/teams/57.png",
       "value": 54.5,
       "remaining": 33
     },
     {
       "team": "Brighton",
+      "logo": "https://media.api-sports.io/football/teams/51.png",
       "value": 54.5,
       "remaining": 33
     },
     {
       "team": "Manchester United",
+      "logo": "https://media.api-sports.io/football/teams/33.png",
       "value": 53.8,
       "remaining": 33
     },
     {
       "team": "Newcastle",
+      "logo": "https://media.api-sports.io/football/teams/34.png",
       "value": 53.7,
       "remaining": 33
     },
     {
       "team": "Arsenal",
+      "logo": "https://media.api-sports.io/football/teams/42.png",
       "value": 53.1,
       "remaining": 33
     },
     {
       "team": "Bournemouth",
+      "logo": "https://media.api-sports.io/football/teams/35.png",
       "value": 53.1,
       "remaining": 33
     },
     {
       "team": "Sunderland",
+      "logo": "https://media.api-sports.io/football/teams/746.png",
       "value": 53.1,
       "remaining": 33
     },
     {
       "team": "Manchester City",
+      "logo": "https://media.api-sports.io/football/teams/50.png",
       "value": 51.8,
       "remaining": 33
     },
     {
       "team": "Crystal Palace",
+      "logo": "https://media.api-sports.io/football/teams/52.png",
       "value": 51.7,
       "remaining": 33
     },
     {
       "team": "Brentford",
+      "logo": "https://media.api-sports.io/football/teams/55.png",
       "value": 51.6,
       "remaining": 33
     },
     {
       "team": "Fulham",
+      "logo": "https://media.api-sports.io/football/teams/36.png",
       "value": 51.4,
       "remaining": 33
     },
     {
       "team": "Tottenham",
+      "logo": "https://media.api-sports.io/football/teams/47.png",
       "value": 50.3,
       "remaining": 33
     },
     {
       "team": "Hull City",
+      "logo": "https://media.api-sports.io/football/teams/64.png",
       "value": 48.4,
       "remaining": 33
     },
     {
       "team": "Nottingham Forest",
+      "logo": "https://media.api-sports.io/football/teams/65.png",
       "value": 48.1,
       "remaining": 33
     },
     {
       "team": "Coventry",
+      "logo": "https://media.api-sports.io/football/teams/1346.png",
       "value": 46.5,
       "remaining": 33
     },
     {
       "team": "Liverpool",
+      "logo": "https://media.api-sports.io/football/teams/40.png",
       "value": 46.2,
       "remaining": 33
     },
     {
       "team": "Everton",
+      "logo": "https://media.api-sports.io/football/teams/45.png",
       "value": 44.7,
       "remaining": 33
     }
@@ -207,101 +250,121 @@
   "o25": [
     {
       "team": "Chelsea",
+      "logo": "https://media.api-sports.io/football/teams/49.png",
       "value": 65.3,
       "remaining": 33
     },
     {
       "team": "Ipswich",
+      "logo": "https://media.api-sports.io/football/teams/57.png",
       "value": 62.1,
       "remaining": 33
     },
     {
       "team": "Brighton",
+      "logo": "https://media.api-sports.io/football/teams/51.png",
       "value": 61.0,
       "remaining": 33
     },
     {
       "team": "Manchester City",
+      "logo": "https://media.api-sports.io/football/teams/50.png",
       "value": 60.3,
       "remaining": 33
     },
     {
       "team": "Aston Villa",
+      "logo": "https://media.api-sports.io/football/teams/66.png",
       "value": 59.8,
       "remaining": 33
     },
     {
       "team": "Leeds",
+      "logo": "https://media.api-sports.io/football/teams/63.png",
       "value": 59.3,
       "remaining": 33
     },
     {
       "team": "Newcastle",
+      "logo": "https://media.api-sports.io/football/teams/34.png",
       "value": 57.2,
       "remaining": 33
     },
     {
       "team": "Manchester United",
+      "logo": "https://media.api-sports.io/football/teams/33.png",
       "value": 56.9,
       "remaining": 33
     },
     {
       "team": "Sunderland",
+      "logo": "https://media.api-sports.io/football/teams/746.png",
       "value": 56.4,
       "remaining": 33
     },
     {
       "team": "Bournemouth",
+      "logo": "https://media.api-sports.io/football/teams/35.png",
       "value": 56.0,
       "remaining": 33
     },
     {
       "team": "Arsenal",
+      "logo": "https://media.api-sports.io/football/teams/42.png",
       "value": 55.6,
       "remaining": 33
     },
     {
       "team": "Crystal Palace",
+      "logo": "https://media.api-sports.io/football/teams/52.png",
       "value": 55.3,
       "remaining": 33
     },
     {
       "team": "Brentford",
+      "logo": "https://media.api-sports.io/football/teams/55.png",
       "value": 53.7,
       "remaining": 33
     },
     {
       "team": "Tottenham",
+      "logo": "https://media.api-sports.io/football/teams/47.png",
       "value": 53.6,
       "remaining": 33
     },
     {
       "team": "Fulham",
+      "logo": "https://media.api-sports.io/football/teams/36.png",
       "value": 52.6,
       "remaining": 33
     },
     {
       "team": "Coventry",
+      "logo": "https://media.api-sports.io/football/teams/1346.png",
       "value": 52.4,
       "remaining": 33
     },
     {
       "team": "Hull City",
+      "logo": "https://media.api-sports.io/football/teams/64.png",
       "value": 47.5,
       "remaining": 33
     },
     {
       "team": "Liverpool",
+      "logo": "https://media.api-sports.io/football/teams/40.png",
       "value": 46.6,
       "remaining": 33
     },
     {
       "team": "Nottingham Forest",
+      "logo": "https://media.api-sports.io/football/teams/65.png",
       "value": 46.3,
       "remaining": 33
     },
     {
       "team": "Everton",
+      "logo": "https://media.api-sports.io/football/teams/45.png",
       "value": 39.7,
       "remaining": 33
     }
@@ -309,101 +372,121 @@
   "handicap": [
     {
       "team": "Leeds",
+      "logo": "https://media.api-sports.io/football/teams/63.png",
       "value": 47.2,
       "remaining": 33
     },
     {
       "team": "Coventry",
+      "logo": "https://media.api-sports.io/football/teams/1346.png",
       "value": 47.2,
       "remaining": 33
     },
     {
       "team": "Chelsea",
+      "logo": "https://media.api-sports.io/football/teams/49.png",
       "value": 46.4,
       "remaining": 33
     },
     {
       "team": "Sunderland",
+      "logo": "https://media.api-sports.io/football/teams/746.png",
       "value": 45.8,
       "remaining": 33
     },
     {
       "team": "Newcastle",
+      "logo": "https://media.api-sports.io/football/teams/34.png",
       "value": 45.4,
       "remaining": 33
     },
     {
       "team": "Hull City",
+      "logo": "https://media.api-sports.io/football/teams/64.png",
       "value": 45.2,
       "remaining": 33
     },
     {
       "team": "Ipswich",
+      "logo": "https://media.api-sports.io/football/teams/57.png",
       "value": 45.1,
       "remaining": 33
     },
     {
       "team": "Manchester United",
+      "logo": "https://media.api-sports.io/football/teams/33.png",
       "value": 45.1,
       "remaining": 33
     },
     {
       "team": "Tottenham",
+      "logo": "https://media.api-sports.io/football/teams/47.png",
       "value": 45.1,
       "remaining": 33
     },
     {
       "team": "Nottingham Forest",
+      "logo": "https://media.api-sports.io/football/teams/65.png",
       "value": 44.5,
       "remaining": 33
     },
     {
       "team": "Fulham",
+      "logo": "https://media.api-sports.io/football/teams/36.png",
       "value": 44.5,
       "remaining": 33
     },
     {
       "team": "Bournemouth",
+      "logo": "https://media.api-sports.io/football/teams/35.png",
       "value": 43.8,
       "remaining": 33
     },
     {
       "team": "Brighton",
+      "logo": "https://media.api-sports.io/football/teams/51.png",
       "value": 43.8,
       "remaining": 33
     },
     {
       "team": "Crystal Palace",
+      "logo": "https://media.api-sports.io/football/teams/52.png",
       "value": 43.6,
       "remaining": 33
     },
     {
       "team": "Aston Villa",
+      "logo": "https://media.api-sports.io/football/teams/66.png",
       "value": 42.9,
       "remaining": 33
     },
     {
       "team": "Arsenal",
+      "logo": "https://media.api-sports.io/football/teams/42.png",
       "value": 42.7,
       "remaining": 33
     },
     {
       "team": "Manchester City",
+      "logo": "https://media.api-sports.io/football/teams/50.png",
       "value": 41.5,
       "remaining": 33
     },
     {
       "team": "Brentford",
+      "logo": "https://media.api-sports.io/football/teams/55.png",
       "value": 41.4,
       "remaining": 33
     },
     {
       "team": "Everton",
+      "logo": "https://media.api-sports.io/football/teams/45.png",
       "value": 40.5,
       "remaining": 33
     },
     {
       "team": "Liverpool",
+      "logo": "https://media.api-sports.io/football/teams/40.png",
       "value": 40.3,
       "remaining": 33
     }
@@ -411,101 +494,121 @@
   "score_home": [
     {
       "team": "Manchester City",
+      "logo": "https://media.api-sports.io/football/teams/50.png",
       "value": 3.42,
       "remaining": 16
     },
     {
       "team": "Brighton",
+      "logo": "https://media.api-sports.io/football/teams/51.png",
       "value": 3.2,
       "remaining": 16
     },
     {
       "team": "Chelsea",
+      "logo": "https://media.api-sports.io/football/teams/49.png",
       "value": 2.52,
       "remaining": 17
     },
     {
       "team": "Aston Villa",
+      "logo": "https://media.api-sports.io/football/teams/66.png",
       "value": 2.41,
       "remaining": 17
     },
     {
       "team": "Crystal Palace",
+      "logo": "https://media.api-sports.io/football/teams/52.png",
       "value": 2.36,
       "remaining": 17
     },
     {
       "team": "Bournemouth",
+      "logo": "https://media.api-sports.io/football/teams/35.png",
       "value": 2.21,
       "remaining": 16
     },
     {
       "team": "Leeds",
+      "logo": "https://media.api-sports.io/football/teams/63.png",
       "value": 2.02,
       "remaining": 16
     },
     {
       "team": "Brentford",
+      "logo": "https://media.api-sports.io/football/teams/55.png",
       "value": 2.0,
       "remaining": 16
     },
     {
       "team": "Liverpool",
+      "logo": "https://media.api-sports.io/football/teams/40.png",
       "value": 1.98,
       "remaining": 17
     },
     {
       "team": "Arsenal",
+      "logo": "https://media.api-sports.io/football/teams/42.png",
       "value": 1.95,
       "remaining": 17
     },
     {
       "team": "Newcastle",
+      "logo": "https://media.api-sports.io/football/teams/34.png",
       "value": 1.92,
       "remaining": 16
     },
     {
       "team": "Manchester United",
+      "logo": "https://media.api-sports.io/football/teams/33.png",
       "value": 1.86,
       "remaining": 17
     },
     {
       "team": "Ipswich",
+      "logo": "https://media.api-sports.io/football/teams/57.png",
       "value": 1.48,
       "remaining": 17
     },
     {
       "team": "Fulham",
+      "logo": "https://media.api-sports.io/football/teams/36.png",
       "value": 1.47,
       "remaining": 16
     },
     {
       "team": "Sunderland",
+      "logo": "https://media.api-sports.io/football/teams/746.png",
       "value": 1.46,
       "remaining": 17
     },
     {
       "team": "Everton",
+      "logo": "https://media.api-sports.io/football/teams/45.png",
       "value": 1.16,
       "remaining": 16
     },
     {
       "team": "Tottenham",
+      "logo": "https://media.api-sports.io/football/teams/47.png",
       "value": 1.05,
       "remaining": 16
     },
     {
       "team": "Hull City",
+      "logo": "https://media.api-sports.io/football/teams/64.png",
       "value": 1.01,
       "remaining": 17
     },
     {
       "team": "Nottingham Forest",
+      "logo": "https://media.api-sports.io/football/teams/65.png",
       "value": 0.96,
       "remaining": 16
     },
     {
       "team": "Coventry",
+      "logo": "https://media.api-sports.io/football/teams/1346.png",
       "value": 0.63,
       "remaining": 17
     }
@@ -513,101 +616,121 @@
   "score_away": [
     {
       "team": "Manchester City",
+      "logo": "https://media.api-sports.io/football/teams/50.png",
       "value": 2.92,
       "remaining": 17
     },
     {
       "team": "Brighton",
+      "logo": "https://media.api-sports.io/football/teams/51.png",
       "value": 2.4,
       "remaining": 17
     },
     {
       "team": "Chelsea",
+      "logo": "https://media.api-sports.io/football/teams/49.png",
       "value": 2.06,
       "remaining": 16
     },
     {
       "team": "Crystal Palace",
+      "logo": "https://media.api-sports.io/football/teams/52.png",
       "value": 2.0,
       "remaining": 16
     },
     {
       "team": "Aston Villa",
+      "logo": "https://media.api-sports.io/football/teams/66.png",
       "value": 1.94,
       "remaining": 16
     },
     {
       "team": "Brentford",
+      "logo": "https://media.api-sports.io/football/teams/55.png",
       "value": 1.75,
       "remaining": 17
     },
     {
       "team": "Arsenal",
+      "logo": "https://media.api-sports.io/football/teams/42.png",
       "value": 1.7,
       "remaining": 16
     },
     {
       "team": "Bournemouth",
+      "logo": "https://media.api-sports.io/football/teams/35.png",
       "value": 1.67,
       "remaining": 17
     },
     {
       "team": "Manchester United",
+      "logo": "https://media.api-sports.io/football/teams/33.png",
       "value": 1.64,
       "remaining": 16
     },
     {
       "team": "Leeds",
+      "logo": "https://media.api-sports.io/football/teams/63.png",
       "value": 1.62,
       "remaining": 17
     },
     {
       "team": "Liverpool",
+      "logo": "https://media.api-sports.io/football/teams/40.png",
       "value": 1.52,
       "remaining": 16
     },
     {
       "team": "Newcastle",
+      "logo": "https://media.api-sports.io/football/teams/34.png",
       "value": 1.47,
       "remaining": 17
     },
     {
       "team": "Fulham",
+      "logo": "https://media.api-sports.io/football/teams/36.png",
       "value": 1.24,
       "remaining": 17
     },
     {
       "team": "Ipswich",
+      "logo": "https://media.api-sports.io/football/teams/57.png",
       "value": 1.23,
       "remaining": 16
     },
     {
       "team": "Sunderland",
+      "logo": "https://media.api-sports.io/football/teams/746.png",
       "value": 1.18,
       "remaining": 16
     },
     {
       "team": "Everton",
+      "logo": "https://media.api-sports.io/football/teams/45.png",
       "value": 1.0,
       "remaining": 17
     },
     {
       "team": "Tottenham",
+      "logo": "https://media.api-sports.io/football/teams/47.png",
       "value": 0.89,
       "remaining": 17
     },
     {
       "team": "Nottingham Forest",
+      "logo": "https://media.api-sports.io/football/teams/65.png",
       "value": 0.87,
       "remaining": 17
     },
     {
       "team": "Hull City",
+      "logo": "https://media.api-sports.io/football/teams/64.png",
       "value": 0.77,
       "remaining": 16
     },
     {
       "team": "Coventry",
+      "logo": "https://media.api-sports.io/football/teams/1346.png",
       "value": 0.53,
       "remaining": 16
     }
