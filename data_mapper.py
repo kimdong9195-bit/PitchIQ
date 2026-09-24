@@ -145,12 +145,14 @@ def build_team(
     return Team(name=name, recent_matches=recent_matches, core_players=core_players)
 
 
-def _compute_pitch_positions(starters: list) -> list:
+def _compute_pitch_positions(starters: list, side: str = "home") -> list:
     """
     grid("행:열") 정보로 각 선수의 화면 상 위치(top%, left%)를 계산한다.
-    골키퍼(행=1)는 화면 아래쪽(자기 진영), 숫자가 큰 행(공격수)일수록
-    위쪽(상대 진영)에 배치한다. grid 정보가 없는 선수는 좌표 계산에서
-    제외한다 (그런 선수는 화면에 그리는 쪽에서 건너뛴다).
+    한 경기장 안에 양팀을 같이 그리기 위해, side가 'home'이면 골키퍼를
+    경기장 맨 위쪽에 두고 공격진이 중앙선 쪽으로 오게, side가 'away'면
+    반대로 골키퍼를 맨 아래쪽에 두고 공격진이 중앙선 쪽으로 오게 배치한다
+    (즉 두 팀이 중앙선을 사이에 두고 서로 마주보는 모양).
+    grid 정보가 없는 선수는 좌표 계산에서 제외한다.
     """
     rows = {}
     for p in starters:
@@ -169,9 +171,16 @@ def _compute_pitch_positions(starters: list) -> list:
     max_row = max(rows.keys())
     positioned = []
     for row, players in rows.items():
-        players.sort(key=lambda t: t[0])  # 실제 col 숫자 기준으로 순서만 맞추고, 배치는 균등 간격으로
+        players.sort(key=lambda t: t[0])
         n = len(players)
-        top_pct = 100 - (row / (max_row + 1)) * 100
+        # f: 0(골키퍼, row=1) ~ 1(제일 앞선 공격진)
+        f = (row - 1) / (max_row - 1) if max_row > 1 else 0.5
+        if side == "home":
+            # 골키퍼 위쪽(8%) ~ 공격진 중앙선쪽(45%)
+            top_pct = 8 + f * 37
+        else:
+            # 골키퍼 아래쪽(92%) ~ 공격진 중앙선쪽(55%)
+            top_pct = 92 - f * 37
         for i, (_, p) in enumerate(players):
             left_pct = (i + 1) / (n + 1) * 100
             p = dict(p)
@@ -181,19 +190,28 @@ def _compute_pitch_positions(starters: list) -> list:
     return positioned
 
 
-def parse_lineups(lineup_data: list) -> dict:
+def parse_lineups(lineup_data: list, home_team_id: int = None) -> dict:
     """
     api_client.get_lineup()의 결과를 화면에 보여줄 형태로 정리.
-    반환: {팀이름: {"formation": "4-2-3-1", "starters": [...], "substitutes": [이름,...]}}
+    반환: {팀이름: {"formation": "4-2-3-1", "starters": [...], "substitutes": [이름,...], "side": "home"/"away"}}
+
+    home_team_id를 주면, 그 팀과 team.id가 일치하는 쪽을 "home"(경기장 위쪽),
+    나머지를 "away"(경기장 아래쪽)로 정확히 구분해서 배치한다. 안 주면(예:
+    과거 호출 호환) 응답에 온 순서대로 첫 번째를 home으로 간주한다.
 
     starters의 각 원소는 {"name":..., "number":..., "pos":"G/D/M/F", "grid":"행:열",
-    "top_pct":.., "left_pct":..} 형태 - top_pct/left_pct는 축구장 다이어그램에
-    바로 쓸 수 있도록 미리 계산해둔 화면상 위치(%)다.
+    "top_pct":.., "left_pct":..} 형태.
     아직 라인업이 발표 안 됐으면 lineup_data가 빈 리스트이고, 이 함수도 빈 dict를 반환한다.
     """
     result = {}
-    for entry in lineup_data:
+    for i, entry in enumerate(lineup_data):
         team_name = entry["team"]["name"]
+        team_id = entry["team"].get("id")
+        if home_team_id is not None:
+            side = "home" if team_id == home_team_id else "away"
+        else:
+            side = "home" if i == 0 else "away"
+
         formation = entry.get("formation") or "포메이션 미공개"
         starters = [
             {
@@ -208,7 +226,8 @@ def parse_lineups(lineup_data: list) -> dict:
         substitutes = [p["player"]["name"] for p in entry.get("substitutes", [])]
         result[team_name] = {
             "formation": formation,
-            "starters": _compute_pitch_positions(starters),
+            "side": side,
+            "starters": _compute_pitch_positions(starters, side=side),
             "substitutes": substitutes,
         }
     return result

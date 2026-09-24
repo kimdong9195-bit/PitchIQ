@@ -229,7 +229,7 @@ def analyze():
             target_fixture = api_client.find_fixture(team_a_info["id"], team_b_info["id"], target_date=before_date)
             if target_fixture:
                 lineup_raw = api_client.get_lineup(target_fixture["fixture"]["id"])
-                lineups = data_mapper.parse_lineups(lineup_raw)
+                lineups = data_mapper.parse_lineups(lineup_raw, home_team_id=team_a_info["id"])
         except Exception:
             # 라인업 조회 실패는 전체 분석을 막을 이유가 없으므로 조용히 넘어간다
             traceback.print_exc()
