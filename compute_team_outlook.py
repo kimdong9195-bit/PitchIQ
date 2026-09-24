@@ -105,6 +105,7 @@ def main():
                 "prob_draw": result["probabilities"]["draw"],
                 "prob_away_win": result["probabilities"]["away_win"],
                 "btts_yes": result["probabilities"]["btts_yes"],
+                "btts_no": result["probabilities"]["btts_no"],
                 "over_2_5": result["probabilities"]["over_2_5"],
                 "under_2_5": result["probabilities"]["under_2_5"],
                 "suggested_line": result["handicap"]["suggested_line"],
@@ -128,7 +129,7 @@ def main():
 
         agg_h = team_agg.setdefault(home, {
             "xp_total": 0.0, "xp_home": [], "xp_away": [],
-            "btts": [], "o25": [], "u25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
+            "btts": [], "btts_no": [], "o25": [], "u25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
             "lambda_home": [], "lambda_away": [], "remaining": 0,
         })
         home_xp = 3 * m["prob_home_win"] + 1 * m["prob_draw"]
@@ -136,6 +137,7 @@ def main():
         agg_h["xp_total"] += home_xp
         agg_h["xp_home"].append(home_xp)
         agg_h["btts"].append(m["btts_yes"])
+        agg_h["btts_no"].append(m["btts_no"])
         agg_h["o25"].append(m["over_2_5"])
         agg_h["u25"].append(m["under_2_5"])
         agg_h["lambda_home"].append(m["lambda_home"])
@@ -145,7 +147,7 @@ def main():
 
         agg_a = team_agg.setdefault(away, {
             "xp_total": 0.0, "xp_home": [], "xp_away": [],
-            "btts": [], "o25": [], "u25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
+            "btts": [], "btts_no": [], "o25": [], "u25": [], "hcap_hit": [], "hcap_push": [], "hcap_miss": [],
             "lambda_home": [], "lambda_away": [], "remaining": 0,
         })
         away_xp = 3 * m["prob_away_win"] + 1 * m["prob_draw"]
@@ -153,6 +155,7 @@ def main():
         agg_a["xp_total"] += away_xp
         agg_a["xp_away"].append(away_xp)
         agg_a["btts"].append(m["btts_yes"])
+        agg_a["btts_no"].append(m["btts_no"])
         agg_a["o25"].append(m["over_2_5"])
         agg_a["u25"].append(m["under_2_5"])
         agg_a["lambda_away"].append(m["lambda_away"])
@@ -186,7 +189,12 @@ def main():
             "remaining": remaining,
         })
         if agg["btts"]:
-            outlook["btts"].append({"team": team, "logo": logo, "value": round(avg(agg["btts"]) * 100, 1), "remaining": remaining})
+            outlook["btts"].append({
+                "team": team, "logo": logo,
+                "value": round(avg(agg["btts"]) * 100, 1),
+                "no_value": round(avg(agg["btts_no"]) * 100, 1) if agg["btts_no"] else None,
+                "remaining": remaining,
+            })
         if agg["o25"]:
             outlook["o25"].append({
                 "team": team, "logo": logo,
