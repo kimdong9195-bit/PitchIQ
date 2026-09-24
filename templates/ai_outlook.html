@@ -170,7 +170,7 @@
 
     <div class="tab-panel" id="panel-handicap">
       <div class="tab-context">
-        핸디라인별로 "모든 팀의 남은 EPL 경기에 그 라인을 동일 적용했을 때"의 평균 커버확률 순위입니다.
+        핸디라인별로 "모든 팀의 남은 EPL 경기에 그 라인을 동일 적용했을 때"의 평균 핸디 적중확률 순위입니다.
         라인은 이번 시즌 실제 대진에서 모델이 산출한 값 중 -2.5~+2.5 범위만 표시됩니다
         {% if outlook.handicap_lines_hidden_count %}(범위 밖 극단 라인 {{ outlook.handicap_lines_hidden_count }}개는 시즌 초반 표본부족 영향으로 판단해 숨김){% endif %}.
         일정·상대팀에 따라 달라지는 전망 지표입니다.
@@ -184,7 +184,7 @@
       {% for line in outlook.handicap_lines %}
         <div class="line-panel {% if loop.first %}active{% endif %}" id="linepanel-{{ loop.index }}">
           <table class="outlook-table">
-            <thead><tr><th></th><th>팀</th><th>커버확률</th><th>잔여</th></tr></thead>
+            <thead><tr><th></th><th>팀</th><th>핸디 적중확률</th><th>잔여</th></tr></thead>
             <tbody>
               {% for row in outlook.handicap_by_line[line] %}
                 <tr>
