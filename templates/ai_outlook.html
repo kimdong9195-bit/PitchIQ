@@ -48,6 +48,21 @@
     background: none; border: 1px solid var(--border); border-radius: 8px;
     color: var(--text); font-size: 12px; padding: 4px 10px; cursor: pointer;
   }
+  .outlook-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .outlook-table th, .outlook-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--row-border); }
+  .outlook-table th { color: var(--muted); font-weight: 600; font-size: 11px; }
+  .outlook-table td.rank { color: var(--muted); width: 24px; }
+  .outlook-table td.team-cell { text-align: left; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .outlook-table td.value { font-weight: 700; color: var(--accent); }
+  .outlook-table td.remaining { color: var(--muted); font-size: 12px; }
+  .line-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .line-tab-btn {
+    background: var(--form-bg); border: 1px solid var(--border); border-radius: 20px;
+    color: var(--text); font-size: 12px; padding: 5px 12px; cursor: pointer;
+  }
+  .line-tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .line-panel { display: none; }
+  .line-panel.active { display: block; }
 </style>
 <script>
   (function () {
@@ -64,6 +79,12 @@
     document.querySelectorAll('.tab-btn').forEach(function (el) { el.classList.remove('active'); });
     document.getElementById('panel-' + name).classList.add('active');
     document.getElementById('btn-' + name).classList.add('active');
+  }
+  function showLine(idx) {
+    document.querySelectorAll('.line-panel').forEach(function (el) { el.classList.remove('active'); });
+    document.querySelectorAll('.line-tab-btn').forEach(function (el) { el.classList.remove('active'); });
+    document.getElementById('linepanel-' + idx).classList.add('active');
+    document.getElementById('linebtn-' + idx).classList.add('active');
   }
 </script>
 </head>
@@ -98,17 +119,25 @@
     </div>
 
     <div class="tab-panel active" id="panel-1x2">
-      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 기대승점(Expected Points) 순위</div>
-      {% for row in outlook['1x2'] %}
-        <div class="outlook-row">
-          <span class="rank">{{ loop.index }}</span>
-          <span class="team">
-            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
-            {{ row.team }}
-          </span>
-          <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
-        </div>
-      {% endfor %}
+      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 기대승점(Expected Points)</div>
+      <table class="outlook-table">
+        <thead><tr><th></th><th>팀</th><th>홈</th><th>원정</th><th>기대승점</th><th>잔여</th></tr></thead>
+        <tbody>
+          {% for row in outlook['1x2'] %}
+            <tr>
+              <td class="rank">{{ loop.index }}</td>
+              <td class="team-cell">
+                {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                {{ row.team }}
+              </td>
+              <td>{{ row.home_value if row.home_value is not none else '-' }}</td>
+              <td>{{ row.away_value if row.away_value is not none else '-' }}</td>
+              <td class="value">{{ row.value }}</td>
+              <td class="remaining">{{ row.remaining }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
     <div class="tab-panel" id="panel-btts">
@@ -140,43 +169,57 @@
     </div>
 
     <div class="tab-panel" id="panel-handicap">
-      <div class="tab-context">EPL 잔여경기 기준 · 경기당 평균 핸디캡 커버 확률 - 일정·상대팀에 따라 달라지는 전망 지표</div>
-      {% for row in outlook.handicap %}
-        <div class="outlook-row">
-          <span class="rank">{{ loop.index }}</span>
-          <span class="team">
-            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
-            {{ row.team }}
-          </span>
-          <span><span class="value">{{ row.value }}%</span><span class="remaining">잔여 {{ row.remaining }}경기</span></span>
+      <div class="tab-context">
+        핸디라인별로 "모든 팀의 남은 EPL 경기에 그 라인을 동일 적용했을 때"의 평균 커버확률 순위입니다.
+        라인은 이번 시즌 실제 대진에서 모델이 산출한 값만 표시됩니다 - 일정·상대팀에 따라 달라지는 전망 지표입니다.
+      </div>
+      <div class="line-tabs">
+        {% for line in outlook.handicap_lines %}
+          <button class="line-tab-btn {% if loop.first %}active{% endif %}" id="linebtn-{{ loop.index }}"
+                  onclick="showLine('{{ loop.index }}')">{{ line }}</button>
+        {% endfor %}
+      </div>
+      {% for line in outlook.handicap_lines %}
+        <div class="line-panel {% if loop.first %}active{% endif %}" id="linepanel-{{ loop.index }}">
+          <table class="outlook-table">
+            <thead><tr><th></th><th>팀</th><th>커버확률</th><th>잔여</th></tr></thead>
+            <tbody>
+              {% for row in outlook.handicap_by_line[line] %}
+                <tr>
+                  <td class="rank">{{ loop.index }}</td>
+                  <td class="team-cell">
+                    {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                    {{ row.team }}
+                  </td>
+                  <td class="value">{{ row.value }}%</td>
+                  <td class="remaining">{{ row.remaining }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       {% endfor %}
     </div>
 
     <div class="tab-panel" id="panel-score">
       <div class="tab-context">EPL 잔여경기 기준 · venue별(홈경기만/원정경기만) 평균 예상득점(λ)</div>
-      <div style="font-weight:bold; margin:10px 0 4px;">홈 득점 전망</div>
-      {% for row in outlook.score_home %}
-        <div class="outlook-row">
-          <span class="rank">{{ loop.index }}</span>
-          <span class="team">
-            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
-            {{ row.team }}
-          </span>
-          <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 홈 {{ row.remaining }}경기</span></span>
-        </div>
-      {% endfor %}
-      <div style="font-weight:bold; margin:16px 0 4px;">원정 득점 전망</div>
-      {% for row in outlook.score_away %}
-        <div class="outlook-row">
-          <span class="rank">{{ loop.index }}</span>
-          <span class="team">
-            {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
-            {{ row.team }}
-          </span>
-          <span><span class="value">{{ row.value }}</span><span class="remaining">잔여 원정 {{ row.remaining }}경기</span></span>
-        </div>
-      {% endfor %}
+      <table class="outlook-table">
+        <thead><tr><th></th><th>팀</th><th>홈</th><th>원정</th><th>잔여</th></tr></thead>
+        <tbody>
+          {% for row in outlook.score %}
+            <tr>
+              <td class="rank">{{ loop.index }}</td>
+              <td class="team-cell">
+                {% if row.logo %}<img src="{{ row.logo }}" class="team-logo" alt="" onerror="this.style.display='none'">{% endif %}
+                {{ row.team }}
+              </td>
+              <td>{{ row.home_value if row.home_value is not none else '-' }}</td>
+              <td>{{ row.away_value if row.away_value is not none else '-' }}</td>
+              <td class="remaining">{{ row.remaining }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   {% endif %}
 </body>
