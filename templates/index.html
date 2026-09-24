@@ -283,45 +283,6 @@
     <label>경기 날짜 (선택, 과거 경기 검증용 - 비워두면 시즌 최신 기준)</label>
     <input type="date" name="match_date" value="{{ form_data.get('match_date', '') }}">
 
-    <p style="font-size:11px; color:var(--muted); margin-top:16px; margin-bottom:0;">
-      아래 항목은 여러 개 동시에 체크할 수 있습니다. 체크 시 <b>득점 감소율은 서로 곱해지고</b>,
-      <b>무승부 보정값은 체크한 항목 중 가장 센 값 하나만</b> 적용됩니다 (더해지지 않음).
-    </p>
-
-    <label style="display:flex; align-items:center; gap:6px; margin-top:12px;">
-      <input type="checkbox" name="title_race" style="width:auto;" {% if form_data.get('title_race') %}checked{% endif %}>
-      타이틀경쟁 / 상위권 맞대결
-    </label>
-    <p style="font-size:11px; color:var(--muted); margin:2px 0 0 24px;">
-      * 기본값과 다른 점: 예상 득점을 <b>15% 낮추고</b>(x0.85), 무승부 보정값을 기본(-0.13)에서
-      <b>-0.30</b>으로 강하게 적용합니다.<br>
-      * 이유: 실력이 비슷한 상위권 팀끼리는 서로 실수를 피하려 신중하게 플레이해서,
-      통계상 우세해 보여도 실제로는 저득점 무승부로 끝나는 경우가 많기 때문입니다.
-    </p>
-
-    <label style="display:flex; align-items:center; gap:6px; margin-top:12px;">
-      <input type="checkbox" name="local_derby" style="width:auto;" {% if form_data.get('local_derby') %}checked{% endif %}>
-      지역 더비 / 라이벌전
-    </label>
-    <p style="font-size:11px; color:var(--muted); margin:2px 0 0 24px;">
-      * 기본값과 다른 점: 예상 득점은 <b>그대로 유지</b>하고, 무승부 보정값만 기본(-0.13)에서
-      <b>-0.35</b>로 (세 항목 중 가장 강하게) 적용합니다.<br>
-      * 이유: 감정적으로 격해지는 더비는 화끈한 대승이 나올 때도 있어서 득점 자체를
-      줄이면 안 되지만, 실제 기록상 무승부 비율이 유독 높기 때문입니다 (예: 머지사이드
-      더비는 최근 22경기 중 12경기가 무승부).
-    </p>
-
-    <label style="display:flex; align-items:center; gap:6px; margin-top:12px;">
-      <input type="checkbox" name="relegation_battle" style="width:auto;" {% if form_data.get('relegation_battle') %}checked{% endif %}>
-      강등권 다툼
-    </label>
-    <p style="font-size:11px; color:var(--muted); margin:2px 0 0 24px;">
-      * 기본값과 다른 점: 예상 득점을 <b>20% 낮추고</b>(x0.80), 무승부 보정값을 기본(-0.13)에서
-      <b>-0.30</b>으로 강하게 적용합니다.<br>
-      * 이유: 팀 실력 자체가 낮은데 져서는 안 된다는 긴장감까지 더해져서, 결정적인
-      찬스가 적고 답답하게 흘러가는 경기가 많다는 관찰을 반영한 것입니다.
-    </p>
-
     <button type="submit">분석하기</button>
   </form>
   {% endif %}
