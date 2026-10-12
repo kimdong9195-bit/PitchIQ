@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>배당 평가 - PitchIQ</title>
+<style>
+  :root {
+    --bg: #f4f6fa; --text: #11182a; --box-bg: #ffffff; --border: #e2e6ee;
+    --form-bg: #eef1f7; --muted: #8891a5; --muted2: #5b6478; --row-border: #edf0f6;
+    --accent: #e63946; --warn-bg: #fff3e0; --good: #1f9d55; --bad: #d64545; --mid: #b7791f;
+  }
+  [data-theme="dark"] {
+    --bg: #0b101c; --text: #e7ebf5; --box-bg: #131b2c; --border: #23304a;
+    --form-bg: #101728; --muted: #8b93ab; --muted2: #aab2c8; --row-border: #1d2740;
+    --accent: #ff4d5e; --warn-bg: #3a2a1a; --good: #3ccf7a; --bad: #ff6b6b; --mid: #e0a84a;
+  }
+  * { transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease; box-sizing: border-box; }
+  html { background-color: var(--bg); min-height: 100%; }
+  body {
+    font-family: -apple-system, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 16px;
+    color: var(--text); background: transparent;
+  }
+  h1 { font-size: 22px; margin: 0 0 12px; }
+  h2 { font-size: 16px; margin: 22px 0 10px; }
+  a { color: var(--accent); }
+  .topbar { display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+            padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .theme-toggle, .nav-link-btn {
+    background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+    font-size: 12px; padding: 0 10px; cursor: pointer; text-decoration: none; height: 28px;
+    display: inline-flex; align-items: center; font-family: inherit; white-space: nowrap;
+  }
+  .note { background: var(--warn-bg); border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+  .box { background: var(--box-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .leg-row { display: grid; grid-template-columns: 1fr 140px 80px 90px; gap: 6px; margin-bottom: 8px; }
+  select, input[type=text] {
+    width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--form-bg); color: var(--text); font-size: 13px; font-family: inherit;
+  }
+  .hint { font-size: 12px; color: var(--muted); margin: 4px 0 10px; line-height: 1.5; }
+  button.submit { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 18px; font-size: 14px; cursor: pointer; }
+  .error { color: var(--bad); font-size: 13px; margin: 8px 0; }
+  .conclusion { font-size: 16px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 6px; border-bottom: 1px solid var(--row-border); text-align: right; }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; }
+  td.left, th.left { text-align: left; }
+  .g-VALUE { color: var(--good); font-weight: 700; }
+  .g-LEAN { color: var(--mid); font-weight: 700; }
+  .g-FAIR { color: var(--muted2); font-weight: 700; }
+  .g-NO_VALUE, .g-INVALID { color: var(--bad); font-weight: 700; }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+  .small { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  @media (max-width: 560px) { .leg-row { grid-template-columns: 1fr 1fr; } }
+</style>
+<script>
+  (function () {
+    var saved = localStorage.getItem('pitchiq-theme');
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+  function toggleTheme() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('pitchiq-theme', 'light'); }
+    else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('pitchiq-theme', 'dark'); }
+  }
+</script>
+</head>
+<body>
+  <h1>🎯 배당 평가</h1>
+  <div class="topbar">
+    <a href="/" class="nav-link-btn">← 경기 분석으로</a>
+    <button type="button" class="theme-toggle" onclick="toggleTheme()">🌓 화면모드</button>
+  </div>
+
+  <div class="note">
+    "맞을 것 같은가"가 아니라 <b>"이 배당이 실제 확률에 비해 충분한가"</b>를 봅니다.
+    확률은 Pinnacle 배당에서 북메이커 몫(마진)을 뺀 <b>시장 공정 확률</b>입니다.
+    과거 7개 시즌 실험에서 PitchIQ 모델보다 이 확률이 더 정확했기 때문입니다.
+    EV(기대값)가 마이너스면 같은 베팅을 오래 반복할수록 손해가 쌓입니다.
+  </div>
+
+  {% if error and not fixtures %}
+    <p class="error">{{ error }}</p>
+  {% else %}
+  <form method="post" class="box">
+    <div class="leg-row small" style="margin-bottom:4px;">
+      <div>경기</div><div>선택</div><div>라인</div><div>배당</div>
+    </div>
+    {% for leg in form_legs %}
+    {% set i = loop.index0 %}
+    <div class="leg-row">
+      <select name="fixture_id_{{ i }}">
+        <option value="">{{ '경기 선택' if i == 0 else '(폴드 레그 추가)' }}</option>
+        {% for f in fixtures %}
+          <option value="{{ f.fixture_id }}" {% if leg.fixture_id == f.fixture_id|string %}selected{% endif %}>
+            {{ f.kickoff[5:10] }} {{ f.home }} vs {{ f.away }}
+          </option>
+        {% endfor %}
+      </select>
+      <select name="pick_{{ i }}">
+        <option value="">선택</option>
+        {% for v, t in [('1x2_home','홈 승'),('1x2_draw','무승부'),('1x2_away','원정 승'),('ou_over','오버'),('ou_under','언더'),('ah_home','홈 핸디캡'),('ah_away','원정 핸디캡')] %}
+          <option value="{{ v }}" {% if leg.pick == v %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="line_{{ i }}" value="{{ leg.line }}" placeholder="2.5 / -0.5">
+      <input type="text" name="odds_{{ i }}" value="{{ leg.odds }}" placeholder="비우면 1xBet">
+    </div>
+    {% endfor %}
+    <div class="hint">
+      · 한 줄이면 단일 베팅, 여러 줄이면 폴드로 평가합니다 (서로 다른 경기만).<br>
+      · 라인: 오버/언더는 2.5처럼, 핸디캡은 <b>고른 팀 기준</b>으로 -0.5 / +1.5처럼 입력합니다 (.5 라인만 지원).<br>
+      · 배당을 비우면 가장 최근 수집된 1xBet 배당을 씁니다. BTTS와 쿼터·정수 라인은 아직 평가하지 않습니다.
+    </div>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <button type="submit" class="submit">평가하기</button>
+  </form>
+  {% endif %}
+
+  {% if result %}
+    <div class="box">
+      <div class="conclusion">결론: {{ result.conclusion }}</div>
+    </div>
+
+    <h2>레그별 판정</h2>
+    <div class="box" style="overflow-x:auto;">
+      <table>
+        <tr><th class="left">경기 / 선택</th><th>배당</th><th>손익분기</th><th>공정 확률</th><th>공정 배당</th><th>EV(점수)</th><th>판정</th></tr>
+        {% for l in result.legs %}
+          {% if l.p is defined %}
+          <tr>
+            <td class="left">{{ l.match }}<br><b>{{ l.label }}</b><div class="small">{{ l.odds_source }}{% if l.odds_source == '입력' and l.x1_odds %} · 1xBet 최신 {{ '%.2f'|format(l.x1_odds) }}{% endif %}</div></td>
+            <td>{{ '%.2f'|format(l.odds) }}</td>
+            <td>{{ '%.1f'|format(l.be * 100) }}%</td>
+            <td>{{ '%.1f'|format(l.p * 100) }}%</td>
+            <td>{{ '%.2f'|format(l.fair_odds) }}</td>
+            <td class="{{ 'pos' if l.ev > 0 else 'neg' }}">{{ '%+.1f'|format(l.ev * 100) }}%</td>
+            <td class="g-{{ l.grade }}">{{ l.grade }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td class="left">{{ l.match or '' }}<br><b>{{ l.label }}</b></td>
+            <td colspan="5" class="left small">{{ l.reason or l.error }}</td>
+            <td class="g-INVALID">{{ l.grade or '오류' }}</td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </table>
+    </div>
+
+    {% if result.fold %}
+      {% set f = result.fold %}
+      <h2>폴드 {{ f.n }}레그</h2>
+      <div class="box">
+        <table>
+          <tr><th class="left">합산 배당</th><th>손익분기</th><th>예상 적중확률</th><th>폴드 EV</th></tr>
+          <tr>
+            <td class="left">{{ '%.2f'|format(f.odds) }}</td>
+            <td>{{ '%.1f'|format(f.be * 100) }}%</td>
+            <td>{{ '%.1f'|format(f.p * 100) }}%</td>
+            <td class="{{ 'pos' if f.ev > 0 else 'neg' }}">{{ '%+.1f'|format(f.ev * 100) }}%</td>
+          </tr>
+        </table>
+        <p class="small">가장 약한 레그: <b>{{ f.weakest.match }} / {{ f.weakest.label }}</b> (EV {{ '%+.1f'|format(f.weakest.ev * 100) }}%)<br>
+          경기끼리 독립이라고 가정한 값입니다. 레그마다 북메이커 마진이 곱해지므로 손해 레그가 섞이면 폴드 EV가 더 나빠집니다.</p>
+      </div>
+    {% endif %}
+
+    {% set ok_legs = result.legs | selectattr('p', 'defined') | list %}
+    {% if ok_legs %}
+      <h2>같은 베팅을 {{ '{:,}'.format(repeat_n) }}번 반복하면</h2>
+      <div class="box" style="overflow-x:auto;">
+        <table>
+          <tr><th class="left">베팅</th><th>기대 손익</th><th>95% 범위</th><th>이익으로 끝날 확률</th></tr>
+          {% for l in ok_legs %}
+          <tr>
+            <td class="left">{{ l.label }}</td>
+            <td class="{{ 'pos' if l.repeat.mean > 0 else 'neg' }}">{{ '%+.0f'|format(l.repeat.mean) }}단위</td>
+            <td>{{ '%+.0f'|format(l.repeat.lo) }} ~ {{ '%+.0f'|format(l.repeat.hi) }}</td>
+            <td>{{ '%.0f'|format(l.repeat.prob_ahead * 100) }}%</td>
+          </tr>
+          {% endfor %}
+          {% if result.fold %}
+          <tr>
+            <td class="left"><b>폴드 {{ result.fold.n }}레그</b></td>
+            <td class="{{ 'pos' if result.fold.repeat.mean > 0 else 'neg' }}">{{ '%+.0f'|format(result.fold.repeat.mean) }}단위</td>
+            <td>{{ '%+.0f'|format(result.fold.repeat.lo) }} ~ {{ '%+.0f'|format(result.fold.repeat.hi) }}</td>
+            <td>{{ '%.0f'|format(result.fold.repeat.prob_ahead * 100) }}%</td>
+          </tr>
+          {% endif %}
+        </table>
+        <p class="small">1단위씩 걸었다고 할 때입니다. 시장 공정 확률이 맞다는 가정의 추정이며, 결과를 보장하지 않습니다.
+          라인업 발표 뒤 배당이 바뀌면 다시 평가하세요.</p>
+      </div>
+    {% endif %}
+  {% endif %}
+</body>
+</html>

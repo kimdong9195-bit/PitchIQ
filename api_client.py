@@ -367,3 +367,58 @@ def get_league_teams(league_id: int, season: int) -> list:
     data = _get("teams", {"league": league_id, "season": season})
     response = data.get("response", [])
     return [{"id": t["team"]["id"], "name": t["team"]["name"], "logo": t["team"].get("logo")} for t in response]
+
+
+# ======================================================================
+# Odds 연동 (최소 구현 - 가치베팅/추천/폴드/리스크스코어는 이번 단계에 없음)
+#
+# *** 아래 3개 함수는 전부 신규 추가 - 기존 함수는 단 한 줄도 안 건드렸다. ***
+#
+# API-Football v3 응답은 공통적으로 {"response":[...], "paging":{"current":N,
+# "total":M}, ...} 형태다(기존 _get()이 이 중 "response"만 꺼내 왔는데,
+# odds는 페이지가 여러 장일 수 있어서(북메이커/마켓이 많은 경기) paging 전체를
+# 봐야 한다 - 그래서 odds 전용으로는 _get()을 감싸는 별도 루프를 쓴다,
+# 기존 _get() 자체는 무수정).
+# ======================================================================
+
+def get_odds(fixture_id: int, bookmaker: int = None, bet: int = None) -> list:
+    """
+    /odds?fixture=... - 한 경기의 pre-match 배당을 전부 가져온다.
+    북메이커/마켓이 많으면 여러 페이지로 나뉠 수 있어서(paging.total > 1)
+    전부 모을 때까지 반복 호출한다 - 첫 페이지만 보고 끝내지 않는다.
+    bookmaker/bet을 지정하면 그 북메이커/마켓만 좁혀서 받아올 수 있다
+    (API-Football 쪽 필터 파라미터 그대로 패스스루).
+    반환: response 배열을 모든 페이지에 걸쳐 이어붙인 리스트.
+    """
+    params = {"fixture": fixture_id}
+    if bookmaker is not None:
+        params["bookmaker"] = bookmaker
+    if bet is not None:
+        params["bet"] = bet
+
+    all_response = []
+    page = 1
+    while True:
+        params["page"] = page
+        data = _get("odds", params)
+        all_response.extend(data.get("response", []))
+        paging = data.get("paging") or {}
+        current, total = paging.get("current", 1), paging.get("total", 1)
+        if current >= total:
+            break
+        page = current + 1
+    return all_response
+
+
+def get_odds_bookmakers() -> list:
+    """/odds/bookmakers - API-Football이 odds를 제공하는 전체 북메이커 목록(id/name)."""
+    data = _get("odds/bookmakers", {})
+    return data.get("response", [])
+
+
+def get_odds_bets() -> list:
+    """/odds/bets - pre-match odds에서 쓰이는 전체 마켓(bet) 목록(id/name).
+    '1X2'/'BTTS'/'Over-Under'/'Asian Handicap' 등이 실제로 어떤 id/이름으로
+    오는지는 이 응답으로 직접 확인해야 한다 - 이름을 임의로 가정하지 않는다."""
+    data = _get("odds/bets", {})
+    return data.get("response", [])

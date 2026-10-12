@@ -21,6 +21,7 @@ from functools import wraps
 from flask import Flask, redirect, render_template, request, session, url_for
 
 import api_client
+import bet_evaluator
 import data_mapper
 import db
 import mailer
@@ -96,6 +97,65 @@ def ai_outlook():
     user = current_user()
     outlook = load_team_outlook()
     return render_template("ai_outlook.html", outlook=outlook, user=user)
+
+
+BET_CHECK_MAX_LEGS = 4
+# 화면의 "선택" 값 -> (시장, 선택 앞부분). OU·AH는 라인 입력값을 뒤에 붙인다.
+BET_CHECK_PICKS = {
+    "1x2_home": ("1X2", "home"), "1x2_draw": ("1X2", "draw"), "1x2_away": ("1X2", "away"),
+    "ou_over": ("OU", "over"), "ou_under": ("OU", "under"),
+    "ah_home": ("AH", "home"), "ah_away": ("AH", "away"),
+}
+
+
+@app.route("/bet-check", methods=["GET", "POST"])
+@login_required
+def bet_check():
+    """
+    배당 합리성 평가 - 고른 베팅·폴드의 EV를 Pinnacle 공정 확률로 계산한다 (bet_evaluator.py).
+    배당은 API-Football에서 직접 조회한다 (경기 목록 1시간·경기별 배당 30분 캐시). 웹 서버에는 배당 DB가 없기 때문이다.
+    호출이 적어 하루 분석 한도는 차감하지 않는다.
+    """
+    user = current_user()
+    form_legs = [{"fixture_id": "", "pick": "", "line": "", "odds": ""} for _ in range(BET_CHECK_MAX_LEGS)]
+    try:
+        names = bet_evaluator.api_fixtures(CURRENT_SEASON)
+    except Exception as e:
+        traceback.print_exc()
+        return render_template("bet_check.html", user=user, fixtures=[], form_legs=form_legs, result=None,
+                               error=f"경기 목록을 불러오지 못했습니다: {e}")
+    fixtures = [{"fixture_id": fid, **n} for fid, n in sorted(names.items(), key=lambda x: x[1]["kickoff"])]
+    if not fixtures:
+        return render_template("bet_check.html", user=user, fixtures=[], form_legs=form_legs, result=None,
+                               error=f"앞으로 {bet_evaluator.API_DAYS_AHEAD}일 안에 열리는 경기가 없습니다.")
+    try:
+        result, error = None, None
+        if request.method == "POST":
+            specs = []
+            for i in range(BET_CHECK_MAX_LEGS):
+                leg = {k: request.form.get(f"{k}_{i}", "").strip() for k in ("fixture_id", "pick", "line", "odds")}
+                form_legs[i] = leg
+                if not leg["fixture_id"] and not leg["pick"]:
+                    continue
+                if not leg["fixture_id"].isdigit() or leg["pick"] not in BET_CHECK_PICKS:
+                    error = f"{i + 1}번째 줄: 경기와 선택을 모두 골라주세요."
+                    break
+                market, side = BET_CHECK_PICKS[leg["pick"]]
+                if market in ("OU", "AH") and not leg["line"]:
+                    error = f"{i + 1}번째 줄: 오버/언더·핸디캡은 라인을 입력해주세요 (예: 2.5, -0.5)."
+                    break
+                selection = side if market == "1X2" else f"{side} {leg['line']}"
+                specs.append({"fixture_id": int(leg["fixture_id"]), "market": market,
+                              "selection": selection, "odds": leg["odds"]})
+            if not error and not specs:
+                error = "평가할 베팅을 한 줄 이상 입력해주세요."
+            if not error:
+                result = bet_evaluator.evaluate_bets(bet_evaluator.api_book(), names, specs)
+    except Exception as e:
+        traceback.print_exc()
+        result, error = None, f"배당을 불러오지 못했습니다: {e}"
+    return render_template("bet_check.html", user=user, fixtures=fixtures, form_legs=form_legs,
+                           result=result, error=error, repeat_n=bet_evaluator.REPEAT_N)
 
 
 @app.route("/signup", methods=["GET", "POST"])
